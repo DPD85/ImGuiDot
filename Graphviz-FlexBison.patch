@@ -1,0 +1,15 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 399530a04..1aea59c86 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -149,6 +149,10 @@ endif()
+ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+ # ============================= Build dependencies =============================
++if(WIN32)
++  set(BISON_EXECUTABLE "${CMAKE_CURRENT_SOURCE_DIR}/windows/dependencies/graphviz-build-utilities/winflexbison/win_bison.exe")
++  set(FLEX_EXECUTABLE  "${CMAKE_CURRENT_SOURCE_DIR}/windows/dependencies/graphviz-build-utilities/winflexbison/win_flex.exe")
++endif()
+ find_package(BISON 3.0)
+ set_package_properties(BISON PROPERTIES TYPE REQUIRED)
+ find_package(FLEX)
