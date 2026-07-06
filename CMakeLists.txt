@@ -14,6 +14,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ----- -----
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+# ----- -----
+
 include(CMake/CPM.cmake)
 
 # If the cache directory where CPM download the dependencies is not specified then set a default to avoid errors due to
