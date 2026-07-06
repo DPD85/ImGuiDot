@@ -16,7 +16,7 @@ Here is an example of a stack compatible with the library:
 - GCC from the 12 to the 14.x version on Linux Debian 13*;
 - MSVC with the v143 and v145 toolset;
 
-* it tentatively works with all Debian derived distros as well.
+\* It tentatively works with all Debian derived distros as well.
 
 ## Quick start
 
