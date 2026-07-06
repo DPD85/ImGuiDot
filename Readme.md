@@ -1,6 +1,6 @@
 # ImGuiDot - Graphviz diagram in ImGui
 
-ImGuiDot can render a Graphviz diagram in ImGui, like a widget, directly from the DOT language.\
+ImGuiDot can render a simple Graphviz diagram in ImGui, like a widget, directly from the DOT language.\
 It uses Graphviz 15.1.0 to parse the DOT language and compute the layout, then it renders the diagram using ImGui draw list.
 
 ![](docs/Example.png)
