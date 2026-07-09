@@ -62,6 +62,7 @@ ImGui::End();
 - arrowheads:
     - normal (triangular shape) with half left, half right, outline and solid styles;
     - box with half left, half right, outline and solid styles;
+    - tee with half left, half right and solid styles;
     - diamond with half left, half right, outline and solid styles;
     - dot with outline and solid styles;
 - labels:
