@@ -59,15 +59,18 @@ ImGui::End();
     - ellipse;
     - diamond;
 - arcs: oriented and not oriented;
-- arrowheads: only the normal one (triangular shape) with half left, half right, outline and solid styles;
+- arrowheads:
+    - normal (triangular shape) with half left, half right, outline and solid styles;
+    - box with half left, half right, outline and solid styles;
+    - inv with half left, half right, outline and solid styles;
 - labels:
     - text with support to UTF-8;
     - font size;
 - stiles:
-    - fill and background colors of the shapes, the arcs and the diagram itself (default is transparent);
-    - border color of the shapes (default is black);
-    - arcs color (default is black);
-    - labels color (default is black).
+    - fill and background colours of the shapes, the arcs and the diagram itself (default is transparent);
+    - border colour of the shapes (default is black);
+    - arcs colour (default is black);
+    - labels colour (default is black).
 
 ### Interfaces
 

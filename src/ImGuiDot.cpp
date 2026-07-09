@@ -31,6 +31,7 @@ namespace ImGuiDot
 
     static const constexpr uint8_t ARROW_SHAPE_MASK      = 0x0F;
     static const constexpr uint8_t ARROW_OUTLINE_MASK    = 0x10;
+    static const constexpr uint8_t ARROW_INVERT_MASK     = 0x20;
     static const constexpr uint8_t ARROW_HALF_LEFT_MASK  = 0x40;
     static const constexpr uint8_t ARROW_HALF_RIGHT_MASK = 0x80;
 
@@ -432,8 +433,20 @@ namespace ImGuiDot
     /// @brief Draw a normal arrowhead (triangular shape).
     /// @copydetails DrawArrowhead
     static void DrawArrowheadNormal(
-        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, uint32_t flags)
+        const Parameters &params, const Vec2 &_apex, const Vec2 &_base, const ImU32 colour, uint32_t flags)
     {
+        Vec2 apex, base;
+        if (flags & ARROW_INVERT_MASK)
+        {
+            apex = _base;
+            base = _apex;
+        }
+        else
+        {
+            apex = _apex;
+            base = _base;
+        }
+
         // Direction to the arrowhead tip.
         Vec2 direction = apex - base;
         if (!direction.Normalize()) return;
