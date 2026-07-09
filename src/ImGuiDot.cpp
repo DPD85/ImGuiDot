@@ -108,6 +108,8 @@ namespace ImGuiDot
         const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
     static void DrawArrowheadBox(
         const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
+    static void DrawArrowheadDot(
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
     static void DrawLabel(
         const Parameters &params,
         const textlabel_t *const label,
@@ -422,6 +424,9 @@ namespace ImGuiDot
             case ArrowheadShapes::Box:
                 DrawArrowheadBox(params, apex, base, colour, flags);
                 break;
+            case ArrowheadShapes::Dot:
+                DrawArrowheadDot(params, apex, base, colour, flags);
+                break;
             case ArrowheadShapes::Normal:
             default:
                 DrawArrowheadNormal(params, apex, base, colour, flags);
@@ -514,6 +519,19 @@ namespace ImGuiDot
         ImDrawList *const draw = ImGui::GetWindowDrawList();
         if (flags & ARROW_OUTLINE_MASK) draw->AddQuad(v0, v1, v2, v3, colour);
         else draw->AddQuadFilled(v0, v1, v2, v3, colour);
+    }
+
+    /// @brief Draw a dot arrowhead (circle shape).
+    /// @copydetails DrawArrowhead
+    static void DrawArrowheadDot(
+        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, uint32_t flags)
+    {
+        const Vec2 centre  = (apex + base) / 2.0f;
+        const float radius = (apex - base).Length() / 2.0f;
+
+        ImDrawList *const draw = ImGui::GetWindowDrawList();
+        if (flags & ARROW_OUTLINE_MASK) draw->AddCircle(centre, radius, colour);
+        else draw->AddCircleFilled(centre, radius, colour);
     }
 
     /// @brief Draw a Graphiviz label of a node or an arc or other.
