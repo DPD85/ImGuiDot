@@ -29,9 +29,23 @@ namespace ImGuiDot
     //  number of pixels = (typographic points) * (DPI / 72).
     static const constexpr float PIXEL_PER_PPI = 96.0f / PPI;
 
+    static const constexpr uint8_t ARROW_SHAPE_MASK      = 0x0F;
     static const constexpr uint8_t ARROW_OUTLINE_MASK    = 0x10;
-    static const constexpr uint8_t ARROW_HALF_LEFT_MASK  = 0x80;
-    static const constexpr uint8_t ARROW_HALF_RIGHT_MASK = 0x40;
+    static const constexpr uint8_t ARROW_HALF_LEFT_MASK  = 0x40;
+    static const constexpr uint8_t ARROW_HALF_RIGHT_MASK = 0x80;
+
+    enum class ArrowheadShapes
+    {
+        None    = 0,
+        Normal  = 1,
+        Crow    = 2,
+        Tee     = 3,
+        Box     = 4,
+        Diamond = 5,
+        Dot     = 6,
+        Curve   = 7,
+        Gap     = 8,
+    };
 
     // ----- Global variables to use the Graphviz plugins -----
 
@@ -88,16 +102,20 @@ namespace ImGuiDot
 
     static void DrawNodes(const Parameters &params);
     static void DrawArcs(const Parameters &params, Agnode_t *const node);
-    static void DrawArrowTip(
-        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 color, uint32_t flags);
+    static void DrawArrowhead(
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
+    static void DrawArrowheadNormal(
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
+    static void DrawArrowheadBox(
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
     static void DrawLabel(
         const Parameters &params,
         const textlabel_t *const label,
-        const ImU32 defaultColor,
+        const ImU32 defaultColour,
         const pointf *const position = nullptr);
     static Vec2 ConvertPoint(const Parameters &params, const Vec2 &point);
-    static Color ExtractColor(void *object, const char *name, const ImColor defaultColor);
-    static Color ExtractColor(const char *color, const ImColor defaultColor);
+    static Colour ExtractColour(void *object, const char *name, const ImColor defaultColour);
+    static Colour ExtractColour(const char *colour, const ImColor defaultColour);
 
     // ----- -----
 
@@ -219,12 +237,12 @@ namespace ImGuiDot
         // ----- Draw diagram background
 
         {
-            const Color color = ExtractColor(params.graph, "bgcolor", IM_COL32(255, 255, 255, 255));
-            if (color.isValid)
+            const Colour colour = ExtractColour(params.graph, "bgcolor", IM_COL32(255, 255, 255, 255));
+            if (colour.isValid)
             {
                 const Vec2 min = params.diagramPos;
                 const Vec2 max = params.diagramPos + size;
-                draw->AddRectFilled(min, max, color.color);
+                draw->AddRectFilled(min, max, colour.colour);
             }
         }
 
@@ -253,8 +271,8 @@ namespace ImGuiDot
             // Coordinate of the node centre.
             const pointf &centre = ND_coord(node);
 
-            const Color borderColor = ExtractColor(node, "color", IM_COL32(0, 0, 0, 255));
-            const Color fillColor   = ExtractColor(node, "fillcolor", IM_COL32(255, 255, 255, 255));
+            const Colour borderColour = ExtractColour(node, "color", IM_COL32(0, 0, 0, 255));
+            const Colour fillColour   = ExtractColour(node, "fillcolor", IM_COL32(255, 255, 255, 255));
 
             const shape_desc *shape = ND_shape(node);
             if (std::strcmp(shape->name, "diamond") == 0)
@@ -264,16 +282,16 @@ namespace ImGuiDot
                 const Vec2 left   = ConvertPoint(params, { centre.x - halfSize.x, centre.y });
                 const Vec2 right  = ConvertPoint(params, { centre.x + halfSize.x, centre.y });
 
-                if (fillColor.isValid) draw->AddQuadFilled(top, right, bottom, left, fillColor.color);
-                draw->AddQuad(top, right, bottom, left, borderColor.color);
+                if (fillColour.isValid) draw->AddQuadFilled(top, right, bottom, left, fillColour.colour);
+                draw->AddQuad(top, right, bottom, left, borderColour.colour);
             }
             else if (std::strcmp(shape->name, "ellipse") == 0 || std::strcmp(shape->name, "oval") == 0)
             {
                 const Vec2 radius        = halfSize * PIXEL_PER_PPI * params.zoom;
                 const Vec2 centreInPixel = ConvertPoint(params, centre);
 
-                if (fillColor.isValid) draw->AddEllipseFilled(centreInPixel, radius, fillColor.color);
-                draw->AddEllipse(centreInPixel, radius, borderColor.color);
+                if (fillColour.isValid) draw->AddEllipseFilled(centreInPixel, radius, fillColour.colour);
+                draw->AddEllipse(centreInPixel, radius, borderColour.colour);
             }
             else if (std::strcmp(shape->name, "circle") == 0)
             {
@@ -281,8 +299,8 @@ namespace ImGuiDot
                 const float radius       = halfSize.x * PIXEL_PER_PPI * params.zoom;
                 const Vec2 centreInPixel = ConvertPoint(params, centre);
 
-                if (fillColor.isValid) draw->AddCircleFilled(centreInPixel, radius, fillColor.color);
-                draw->AddCircle(centreInPixel, radius, borderColor.color);
+                if (fillColour.isValid) draw->AddCircleFilled(centreInPixel, radius, fillColour.colour);
+                draw->AddCircle(centreInPixel, radius, borderColour.colour);
             }
             // The Default shape is box, rect or rectangle.
             else
@@ -290,8 +308,8 @@ namespace ImGuiDot
                 const Vec2 min = ConvertPoint(params, centre - halfSize);
                 const Vec2 max = ConvertPoint(params, centre + halfSize);
 
-                if (fillColor.isValid) draw->AddRectFilled(min, max, fillColor.color);
-                draw->AddRect(min, max, borderColor.color);
+                if (fillColour.isValid) draw->AddRectFilled(min, max, fillColour.colour);
+                draw->AddRect(min, max, borderColour.colour);
             }
 
             // ----- Draw the label
@@ -320,7 +338,7 @@ namespace ImGuiDot
             const splines *spline = ED_spl(arc);
             if (!spline) continue;
 
-            const Color color = ExtractColor(arc, "color", IM_COL32(0, 0, 0, 255));
+            const Colour colour = ExtractColour(arc, "color", IM_COL32(0, 0, 0, 255));
 
             for (size_t i = 0; i < spline->size; ++i)
             {
@@ -337,23 +355,23 @@ namespace ImGuiDot
                     const Vec2 c2 = ConvertPoint(params, bezier.list[j + 2]);
                     const Vec2 p1 = ConvertPoint(params, bezier.list[j + 3]);
 
-                    draw->AddBezierCubic(p0, c1, c2, p1, color.color, 1.0f);
+                    draw->AddBezierCubic(p0, c1, c2, p1, colour.colour, 1.0f);
                 }
 
-                // Arrow tip at the arc begin.
+                // Arrowhead at the arc begin.
                 if (bezier.sflag)
                 {
                     const Vec2 apex = ConvertPoint(params, bezier.sp);
                     const Vec2 from = ConvertPoint(params, bezier.list[0]);
-                    DrawArrowTip(params, apex, from, color.color, bezier.sflag);
+                    DrawArrowhead(params, apex, from, colour.colour, bezier.sflag);
                 }
 
-                // Arrow tip at the arc end.
+                // Arrowhead at the arc end.
                 if (bezier.eflag)
                 {
                     const Vec2 apex = ConvertPoint(params, bezier.ep);
                     const Vec2 from = ConvertPoint(params, bezier.list[bezier.size - 1]);
-                    DrawArrowTip(params, apex, from, color.color, bezier.eflag);
+                    DrawArrowhead(params, apex, from, colour.colour, bezier.eflag);
                 }
             }
 
@@ -366,13 +384,15 @@ namespace ImGuiDot
         }
     }
 
-    /// @brief Draw the tip of a arrow.
+    /// @brief Draw a arrowhead.
     /// @param params The internal state and parameters to use.
-    /// @param apex The coordinate of the apex of the arrow tip. [pixel]
-    /// @param from The coordinate of the arc point where the arrow tip is placed. [pixel]
-    /// @param color The color of the arrow tip.
-    static void DrawArrowTip(
-        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 color, uint32_t flags)
+    /// @param apex The coordinate of the apex of the arrowhead. [pixel]
+    /// @param base The coordinate of the arc point where the arrowhead is placed, correspond to the base centre point
+    ///             of the arrowhead. [pixel]
+    /// @param colour The colour of the arrowhead.
+    /// @param flags The Graphviz flags of the arrowhead.
+    static void DrawArrowhead(
+        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, uint32_t flags)
     {
         // Arrowhead flag format in Graphviz (https://graphviz.org/doc/info/arrows.html).
         //
@@ -396,55 +416,116 @@ namespace ImGuiDot
         //   - 7 = curve;
         //   - 8 = gap;
 
-        // At the moment only the normal (triangular) arrowhead is draw considering the various bit combinations.
+        const auto shape = static_cast<ArrowheadShapes>(flags & ARROW_SHAPE_MASK);
+        switch (shape)
+        {
+            case ArrowheadShapes::Box:
+                DrawArrowheadBox(params, apex, base, colour, flags);
+                break;
+            case ArrowheadShapes::Normal:
+            default:
+                DrawArrowheadNormal(params, apex, base, colour, flags);
+                break;
+        }
+    }
 
-        // Direction to the arrow tip.
-        Vec2 direction(apex.x - from.x, apex.y - from.y);
+    /// @brief Draw a normal arrowhead (triangular shape).
+    /// @copydetails DrawArrowhead
+    static void DrawArrowheadNormal(
+        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, uint32_t flags)
+    {
+        // Direction to the arrowhead tip.
+        Vec2 direction = apex - base;
         if (!direction.Normalize()) return;
 
-        // Perpendicular unit vector.
-        const Vec2 n(-direction.y, direction.x);
+        static constexpr float SHAPE_WIDTH = 5.0f; // [pixel]
 
-        static constexpr float TIP_WIDTH = 5.0f; // [pixel]
+        // Perpendicular unit vector scaled to include the width of the shape.
+        Vec2 n(-direction.y, direction.x);
+        n *= SHAPE_WIDTH * params.zoom;
 
-        // Centre point of the base of the triangle.
-        const Vec2 base = from;
-
+        // Vertexes of the triangle.
         const Vec2 v0 = apex;
         Vec2 v1;
         Vec2 v2;
 
-        if (flags & ARROW_HALF_LEFT_MASK)
+        if (flags & ARROW_HALF_RIGHT_MASK)
         {
-            v1 = base + n * TIP_WIDTH * params.zoom;
+            v1 = base + n;
             v2 = base;
         }
-        else if (flags & ARROW_HALF_RIGHT_MASK)
+        else if (flags & ARROW_HALF_LEFT_MASK)
         {
             v1 = base;
-            v2 = base - n * TIP_WIDTH * params.zoom;
+            v2 = base - n;
         }
         else
         {
-            v1 = base + n * TIP_WIDTH * params.zoom;
-            v2 = base - n * TIP_WIDTH * params.zoom;
+            v1 = base + n;
+            v2 = base - n;
         }
 
         ImDrawList *const draw = ImGui::GetWindowDrawList();
-        if (flags & ARROW_OUTLINE_MASK) draw->AddTriangle(v0, v1, v2, color);
-        else draw->AddTriangleFilled(v0, v1, v2, color);
+        if (flags & ARROW_OUTLINE_MASK) draw->AddTriangle(v0, v1, v2, colour);
+        else draw->AddTriangleFilled(v0, v1, v2, colour);
+    }
+
+    /// @brief Draw a box arrowhead (box shape).
+    /// @copydetails DrawArrowhead
+    static void DrawArrowheadBox(
+        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, uint32_t flags)
+    {
+        // Direction to the arrowhead tip.
+        Vec2 direction = apex - base;
+
+        const float shapeWidth = direction.Length() / 2.0f;
+
+        if (!direction.Normalize()) return;
+
+        // Perpendicular unit vector scaled to include the width of the shape.
+        Vec2 n(-direction.y, direction.x);
+        n *= shapeWidth;
+
+        // Vertexes of the box.
+        Vec2 v0, v1, v2, v3;
+
+        if (flags & ARROW_HALF_RIGHT_MASK)
+        {
+            v0 = apex;
+            v1 = apex + n;
+            v2 = base + n;
+            v3 = base;
+        }
+        else if (flags & ARROW_HALF_LEFT_MASK)
+        {
+            v0 = apex - n;
+            v1 = apex;
+            v2 = base;
+            v3 = base - n;
+        }
+        else
+        {
+            v0 = apex - n;
+            v1 = apex + n;
+            v2 = base + n;
+            v3 = base - n;
+        }
+
+        ImDrawList *const draw = ImGui::GetWindowDrawList();
+        if (flags & ARROW_OUTLINE_MASK) draw->AddQuad(v0, v1, v2, v3, colour);
+        else draw->AddQuadFilled(v0, v1, v2, v3, colour);
     }
 
     /// @brief Draw a Graphiviz label of a node or an arc or other.
     /// @param params The internal state and parameters to use.
     /// @param label The Graphviz label to draw.
-    /// @param defaultColor The color to use if the label it self don't have one.
+    /// @param defaultColour The colour to use if the label it self don't have one.
     /// @param position Optional coordinate of the label position, they are used when the label does not provide a
     ///                 position by itself (like the nodes labels for example). [pixel]
     static void DrawLabel(
         const Parameters &params,
         const textlabel_t *const label,
-        const ImU32 defaultColor,
+        const ImU32 defaultColour,
         const pointf *const position)
     {
         if (!label || !label->text || label->text[0] == '\0') return;
@@ -456,7 +537,7 @@ namespace ImGuiDot
         const float fontSize = static_cast<float>(label->fontsize) * params.zoom;
         const Vec2 textSize  = font->CalcTextSizeA(fontSize, std::numeric_limits<float>::max(), -1.0f, label->text);
 
-        const Color color = ExtractColor(label->fontcolor, defaultColor);
+        const Colour colour = ExtractColour(label->fontcolor, defaultColour);
 
         Vec2 pos;
 
@@ -466,14 +547,13 @@ namespace ImGuiDot
         pos -= textSize / 2.0f;
 
         ImDrawList *const draw = ImGui::GetWindowDrawList();
-        draw->AddText(font, fontSize, pos, color.color, label->text);
+        draw->AddText(font, fontSize, pos, colour.colour, label->text);
     }
 
-    /// @brief Converte un punto dal sistema di riferimento di Graphviz a pixel (sistema di riferimento di ImGui).
-    /// @param point Il punto da convertire. [PPI]
-    /// @param diagramHeight L'altezza totale del diagramma. [PPI]
-    /// @param diagramPos La posizione del diagramma in pixel.
-    /// @return Le coordinate del punto convertite in pixel e ribaltate sull'asse x (sotto-sopra).
+    /// @brief Converts a point from Graphviz's coordinate system to pixels (ImGui's coordinate system).
+    /// @param params The internal state and parameters to use.
+    /// @param point The point to convert. [PPI]
+    /// @return The point's coordinates converted to pixels and flipped on the x-axis (upside-down).
     static Vec2 ConvertPoint(const Parameters &params, const Vec2 &point)
     {
         const float diagramHeight = static_cast<float>(GD_bb(params.graph).UR.y);
@@ -493,31 +573,32 @@ namespace ImGuiDot
         return p;
     }
 
-    /// @brief Recupera ed estrae un colore in formato Graphviz da una proprietà di un oggetto di Graphviz e lo converte
-    /// in formato ImGui.
-    /// @param object L'oggetto di Graphviz.
-    /// @param name Il nome della proprietà dell'oggetto.
-    /// @param defaultColor Il colore in formato ImGui da restituire se l'estrazione fallisce.
-    /// @return Il colore estratto con validità a True in caso di successo, il colore predefinito e la validità a False
-    ///         in caso di fallimento.
-    static Color ExtractColor(void *object, const char *name, const ImColor defaultColor)
+    /// @brief Retrieves and extracts a colour in Graphviz format from a Graphviz object property and converts it to
+    ///        ImGui format.
+    /// @param object The Graphviz object.
+    /// @param name The name of the object's property.
+    /// @param defaultColour The colour in ImGui format to return if extraction fails.
+    /// @return The extracted colour with validity set to True on success, or the default colour with validity set to
+    ///         False on failure.
+    static Colour ExtractColour(void *object, const char *name, const ImColor defaultColour)
     {
-        const char *color = agget(object, const_cast<char *>(name));
-        return ExtractColor(color, defaultColor);
+        const char *colour = agget(object, const_cast<char *>(name));
+        return ExtractColour(colour, defaultColour);
     }
 
-    /// @brief Data una stringa con un colore in formato Graphviz, ne estrae il colore e lo converte in formato ImGui.
-    /// @param colore Il colore in formato Graphviz.
-    /// @param defaultColor Il colore in formato ImGui da restituire se l'estrazione fallisce.
-    /// @return Il colore estratto con validità a True in caso di successo, il colore predefinito e la validità a False
-    ///         in caso di fallimento.
-    static Color ExtractColor(const char *color, const ImColor defaultColor)
+    /// @brief Given a string containing a colour in Graphviz format, extracts the colour and converts it to ImGui
+    ///        format.
+    /// @param colour The colour in Graphviz format.
+    /// @param defaultColour The colour in ImGui format to return if extraction fails.
+    /// @return The extracted colour with validity set to True on success, or the default colour with validity set to
+    ///         False on failure.
+    static Colour ExtractColour(const char *colour, const ImColor defaultColour)
     {
-        if (!color || color[0] == '\0') return { defaultColor, false };
+        if (!colour || colour[0] == '\0') return { defaultColour, false };
 
         gvcolor_t coloreGV;
-        if (colorxlate(color, &coloreGV, RGBA_BYTE) == COLOR_OK)
+        if (colorxlate(colour, &coloreGV, RGBA_BYTE) == COLOR_OK)
             return { IM_COL32(coloreGV.u.rgba[0], coloreGV.u.rgba[1], coloreGV.u.rgba[2], coloreGV.u.rgba[3]), true };
-        else return { defaultColor, false };
+        else return { defaultColour, false };
     }
 }
