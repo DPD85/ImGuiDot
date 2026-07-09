@@ -7,9 +7,9 @@
 namespace ImGuiDot
 {
     // A ImColor extracted or converted from the Graphviz format.
-    struct Color
+    struct Colour
     {
-        ImColor color;
+        ImColor colour;
         bool isValid;
     };
 
