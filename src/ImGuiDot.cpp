@@ -108,6 +108,8 @@ namespace ImGuiDot
         const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
     static void DrawArrowheadBox(
         const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
+    static void DrawArrowheadTee(
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
     static void DrawLabel(
         const Parameters &params,
         const textlabel_t *const label,
@@ -422,6 +424,9 @@ namespace ImGuiDot
             case ArrowheadShapes::Box:
                 DrawArrowheadBox(params, apex, base, colour, flags);
                 break;
+            case ArrowheadShapes::Tee:
+                DrawArrowheadTee(params, apex, base, colour, flags);
+                break;
             case ArrowheadShapes::Normal:
             default:
                 DrawArrowheadNormal(params, apex, base, colour, flags);
@@ -514,6 +519,45 @@ namespace ImGuiDot
         ImDrawList *const draw = ImGui::GetWindowDrawList();
         if (flags & ARROW_OUTLINE_MASK) draw->AddQuad(v0, v1, v2, v3, colour);
         else draw->AddQuadFilled(v0, v1, v2, v3, colour);
+    }
+
+    /// @brief Draw a tee arrowhead (rectangle shape).
+    /// @copydetails DrawArrowhead
+    static void DrawArrowheadTee(
+        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, uint32_t flags)
+    {
+        // Direction to the arrowhead tip.
+        const Vec2 direction = (apex - base);
+        // Perpendicular unit vector scaled to the proper width.
+        const Vec2 n = Vec2(-direction.y, direction.x) * 1.5f;
+
+        // Vertexes of the rectangle.
+        Vec2 v0, v1, v2, v3;
+
+        if (flags & ARROW_HALF_RIGHT_MASK)
+        {
+            v0 = apex;
+            v1 = apex + n;
+            v2 = base + n;
+            v3 = base;
+        }
+        else if (flags & ARROW_HALF_LEFT_MASK)
+        {
+            v0 = apex - n;
+            v1 = apex;
+            v2 = base;
+            v3 = base - n;
+        }
+        else
+        {
+            v0 = apex - n;
+            v1 = apex + n;
+            v2 = base + n;
+            v3 = base - n;
+        }
+
+        ImDrawList *const draw = ImGui::GetWindowDrawList();
+        draw->AddQuadFilled(v0, v1, v2, v3, colour);
     }
 
     /// @brief Draw a Graphiviz label of a node or an arc or other.
