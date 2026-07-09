@@ -108,6 +108,8 @@ namespace ImGuiDot
         const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
     static void DrawArrowheadBox(
         const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
+    static void DrawArrowheadDiamond(
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
     static void DrawLabel(
         const Parameters &params,
         const textlabel_t *const label,
@@ -422,6 +424,9 @@ namespace ImGuiDot
             case ArrowheadShapes::Box:
                 DrawArrowheadBox(params, apex, base, colour, flags);
                 break;
+            case ArrowheadShapes::Diamond:
+                DrawArrowheadDiamond(params, apex, base, colour, flags);
+                break;
             case ArrowheadShapes::Normal:
             default:
                 DrawArrowheadNormal(params, apex, base, colour, flags);
@@ -434,15 +439,14 @@ namespace ImGuiDot
     static void DrawArrowheadNormal(
         const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, uint32_t flags)
     {
+        static constexpr float SHAPE_WIDTH = 5.0f; // [pixel]
+
         // Direction to the arrowhead tip.
         Vec2 direction = apex - base;
         if (!direction.Normalize()) return;
 
-        static constexpr float SHAPE_WIDTH = 5.0f; // [pixel]
-
-        // Perpendicular unit vector scaled to include the width of the shape.
-        Vec2 n(-direction.y, direction.x);
-        n *= SHAPE_WIDTH * params.zoom;
+        // Perpendicular unit vector scaled to include the proper length.
+        const Vec2 n = Vec2(-direction.y, direction.x) * SHAPE_WIDTH * params.zoom;
 
         // Vertexes of the triangle.
         const Vec2 v0 = apex;
@@ -475,16 +479,10 @@ namespace ImGuiDot
     static void DrawArrowheadBox(
         const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, uint32_t flags)
     {
-        // Direction to the arrowhead tip.
-        Vec2 direction = apex - base;
-
-        const float shapeWidth = direction.Length() / 2.0f;
-
-        if (!direction.Normalize()) return;
-
-        // Perpendicular unit vector scaled to include the width of the shape.
-        Vec2 n(-direction.y, direction.x);
-        n *= shapeWidth;
+        // Half of the direction to the arrowhead tip.
+        const Vec2 direction = (apex - base) / 2.0f;
+        // Perpendicular unit vector.
+        const Vec2 n(-direction.y, direction.x);
 
         // Vertexes of the box.
         Vec2 v0, v1, v2, v3;
@@ -514,6 +512,51 @@ namespace ImGuiDot
         ImDrawList *const draw = ImGui::GetWindowDrawList();
         if (flags & ARROW_OUTLINE_MASK) draw->AddQuad(v0, v1, v2, v3, colour);
         else draw->AddQuadFilled(v0, v1, v2, v3, colour);
+    }
+
+    /// @brief Draw a diamond arrowhead (rhombus shape).
+    /// @copydetails DrawArrowhead
+    static void DrawArrowheadDiamond(
+        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, uint32_t flags)
+    {
+        // Half of the direction to the arrowhead tip.
+        const Vec2 direction = (apex - base) / 2.0f;
+        // Perpendicular unit vector scaled to include the proper length.
+        const Vec2 n = Vec2(-direction.y, direction.x) * 0.6f;
+
+        ImDrawList *const draw = ImGui::GetWindowDrawList();
+
+        if (flags & ARROW_HALF_RIGHT_MASK)
+        {
+            // Vertexes of the triangle.
+            const Vec2 v0 = apex;
+            const Vec2 v1 = apex + n - direction;
+            const Vec2 v2 = base;
+
+            if (flags & ARROW_OUTLINE_MASK) draw->AddTriangle(v0, v1, v2, colour);
+            else draw->AddTriangleFilled(v0, v1, v2, colour);
+        }
+        else if (flags & ARROW_HALF_LEFT_MASK)
+        {
+            // Vertexes of the triangle.
+            const Vec2 v0 = apex;
+            const Vec2 v1 = base;
+            const Vec2 v2 = base - n + direction;
+
+            if (flags & ARROW_OUTLINE_MASK) draw->AddTriangle(v0, v1, v2, colour);
+            else draw->AddTriangleFilled(v0, v1, v2, colour);
+        }
+        else
+        {
+            // Vertexes of the rhombus.
+            const Vec2 v0 = apex;
+            const Vec2 v1 = apex + n - direction;
+            const Vec2 v2 = base;
+            const Vec2 v3 = base - n + direction;
+
+            if (flags & ARROW_OUTLINE_MASK) draw->AddQuad(v0, v1, v2, v3, colour);
+            else draw->AddQuadFilled(v0, v1, v2, v3, colour);
+        }
     }
 
     /// @brief Draw a Graphiviz label of a node or an arc or other.
