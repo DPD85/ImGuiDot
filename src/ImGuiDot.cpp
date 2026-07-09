@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cgraph.h>
 #include <colorprocs.h>
+#include <cstdint>
 #include <cstring>
 #include <gvc.h>
 #include <gvplugin.h>
@@ -27,6 +28,10 @@ namespace ImGuiDot
     // then:
     //  number of pixels = (typographic points) * (DPI / 72).
     static const constexpr float PIXEL_PER_PPI = 96.0f / PPI;
+
+    static const constexpr uint8_t ARROW_OUTLINE_MASK    = 0x10;
+    static const constexpr uint8_t ARROW_HALF_LEFT_MASK  = 0x80;
+    static const constexpr uint8_t ARROW_HALF_RIGHT_MASK = 0x40;
 
     // ----- Global variables to use the Graphviz plugins -----
 
@@ -83,7 +88,8 @@ namespace ImGuiDot
 
     static void DrawNodes(const Parameters &params);
     static void DrawArcs(const Parameters &params, Agnode_t *const node);
-    static void DrawArrowTip(const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 color);
+    static void DrawArrowTip(
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 color, uint32_t flags);
     static void DrawLabel(
         const Parameters &params,
         const textlabel_t *const label,
@@ -303,7 +309,7 @@ namespace ImGuiDot
 
     /// @brief Draw all the arcs of a node.
     /// @param params The internal state and parameters to use.
-    /// @param node The Graphiviz node.
+    /// @param node The Graphviz node.
     static void DrawArcs(const Parameters &params, Agnode_t *const node)
     {
         ImDrawList *const draw    = ImGui::GetWindowDrawList();
@@ -338,8 +344,8 @@ namespace ImGuiDot
                 if (bezier.sflag)
                 {
                     const Vec2 apex = ConvertPoint(params, bezier.sp);
-                    const Vec2 from = ConvertPoint(params, bezier.list[1]);
-                    DrawArrowTip(params, apex, from, color.color);
+                    const Vec2 from = ConvertPoint(params, bezier.list[0]);
+                    DrawArrowTip(params, apex, from, color.color, bezier.sflag);
                 }
 
                 // Arrow tip at the arc end.
@@ -347,7 +353,7 @@ namespace ImGuiDot
                 {
                     const Vec2 apex = ConvertPoint(params, bezier.ep);
                     const Vec2 from = ConvertPoint(params, bezier.list[bezier.size - 1]);
-                    DrawArrowTip(params, apex, from, color.color);
+                    DrawArrowTip(params, apex, from, color.color, bezier.eflag);
                 }
             }
 
@@ -365,8 +371,33 @@ namespace ImGuiDot
     /// @param apex The coordinate of the apex of the arrow tip. [pixel]
     /// @param from The coordinate of the arc point where the arrow tip is placed. [pixel]
     /// @param color The color of the arrow tip.
-    static void DrawArrowTip(const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 color)
+    static void DrawArrowTip(
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 color, uint32_t flags)
     {
+        // Arrowhead flag format in Graphviz (https://graphviz.org/doc/info/arrows.html).
+        //
+        // Up to 4 arrowhead types combined together, 1 byte per arrowhead type.
+        // All bytes share the same format:
+        //    RL0B TTTT
+        // where
+        //   - R = bit set if only the right half of the arrowhead should be drawn;
+        //   - L = bit set if only the left half of the arrowhead should be drawn;
+        //   - B = bit set if the outline of the arrowhead should be drawn;
+        //   - T = 4-bit number indicating the arrowhead type;
+        //   - if neither R nor L is set, the full arrowhead should be drawn;
+        // The arrowhead types are:
+        //   - 0 = none;
+        //   - 1 = normal (triangular);
+        //   - 2 = crow;
+        //   - 3 = tee;
+        //   - 4 = box;
+        //   - 5 = diamond;
+        //   - 6 = dot;
+        //   - 7 = curve;
+        //   - 8 = gap;
+
+        // At the moment only the normal (triangular) arrowhead is draw considering the various bit combinations.
+
         // Direction to the arrow tip.
         Vec2 direction(apex.x - from.x, apex.y - from.y);
         if (!direction.Normalize()) return;
@@ -374,18 +405,34 @@ namespace ImGuiDot
         // Perpendicular unit vector.
         const Vec2 n(-direction.y, direction.x);
 
-        static constexpr float TIP_LENGTH = 15.0f;             // [pixel]
-        static constexpr float TIP_WIDTH  = TIP_LENGTH * 0.5f; // [pixel]
+        static constexpr float TIP_WIDTH = 5.0f; // [pixel]
 
         // Centre point of the base of the triangle.
-        const Vec2 base = apex - direction * TIP_LENGTH * params.zoom;
+        const Vec2 base = from;
 
         const Vec2 v0 = apex;
-        const Vec2 v1 = base + n * TIP_WIDTH * params.zoom;
-        const Vec2 v2 = base - n * TIP_WIDTH * params.zoom;
+        Vec2 v1;
+        Vec2 v2;
+
+        if (flags & ARROW_HALF_LEFT_MASK)
+        {
+            v1 = base + n * TIP_WIDTH * params.zoom;
+            v2 = base;
+        }
+        else if (flags & ARROW_HALF_RIGHT_MASK)
+        {
+            v1 = base;
+            v2 = base - n * TIP_WIDTH * params.zoom;
+        }
+        else
+        {
+            v1 = base + n * TIP_WIDTH * params.zoom;
+            v2 = base - n * TIP_WIDTH * params.zoom;
+        }
 
         ImDrawList *const draw = ImGui::GetWindowDrawList();
-        draw->AddTriangleFilled(v0, v1, v2, color);
+        if (flags & ARROW_OUTLINE_MASK) draw->AddTriangle(v0, v1, v2, color);
+        else draw->AddTriangleFilled(v0, v1, v2, color);
     }
 
     /// @brief Draw a Graphiviz label of a node or an arc or other.
