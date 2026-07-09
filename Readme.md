@@ -38,7 +38,7 @@ const char* const dotSourceCode = R"(digraph Flow {
     action [shape=box,      fillcolor="#2196F3", color="#1565C0", label="Action"]
     end    [shape=ellipse,  fillcolor="#F44336", color="#B71C1C", label="End"]
 
-    start  -> check  [label="start", dir="both"]
+    start  -> check  [label="start", dir="both", arrowtail="ornormal"]
     check  -> action [label="yes", color="#4CAF50", fontcolor="#4CAF50"]
     check  -> end    [label="no" , color="#F44336", fontcolor="#F44336"]
     action -> end
@@ -58,9 +58,8 @@ ImGui::End();
     - circle;
     - ellipse;
     - diamond;
-- arcs:
-    - oriented and not oriented;
-    - filled triangular arrow tip (correspond to the normal one in Graphviz);
+- arcs: oriented and not oriented;
+- arrowheads: only the normal one (triangular shape) with half left, half right, outline and solid styles;
 - labels:
     - text with support to UTF-8;
     - font size;

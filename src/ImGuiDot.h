@@ -15,7 +15,8 @@ namespace ImGuiDot
     bool Initialize();
 
     /// @brief Clean up the global resources used.
-    /// @remark This function must be call one time before the end of the program when the library is not more necessary.
+    /// @remark This function must be call one time before the end of the program when the library is not more
+    ///         necessary.
     void CleanUp();
 
     // ----- -----
