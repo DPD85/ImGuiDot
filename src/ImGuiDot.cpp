@@ -29,6 +29,19 @@ namespace ImGuiDot
     //  number of pixels = (typographic points) * (DPI / 72).
     static const constexpr float PIXEL_PER_PPI = 96.0f / PPI;
 
+    // Arrowhead flag format in Graphviz (https://graphviz.org/doc/info/arrows.html).
+    //
+    // Up to 4 arrowhead types combined together, 1 byte per arrowhead type.
+    // All bytes share the same format:
+    //    RLIB TTTT
+    // where
+    //   - R = bit set if only the right half of the arrowhead should be drawn;
+    //   - L = bit set if only the left half of the arrowhead should be drawn;
+    //     I = bit set if the shape should be draw inverted (rotate of 180° around itself centre);
+    //   - B = bit set if the outline of the arrowhead should be drawn;
+    //   - T = 4-bit number indicating the arrowhead type;
+    //   - if neither R nor L is set, the full arrowhead should be drawn;
+
     static const constexpr uint8_t ARROW_SHAPE_MASK      = 0x0F;
     static const constexpr uint8_t ARROW_OUTLINE_MASK    = 0x10;
     static const constexpr uint8_t ARROW_INVERT_MASK     = 0x20;
@@ -102,21 +115,21 @@ namespace ImGuiDot
     static void DrawNodes(const Parameters &params);
     static void DrawArcs(const Parameters &params, Agnode_t *const node);
     static void DrawArrowhead(
-        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, const uint32_t flags);
     static void DrawArrowheadNormal(
-        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, const uint32_t flags);
     static void DrawArrowheadBox(
-        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, const uint32_t flags);
     static void DrawArrowheadTee(
-        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, const uint32_t flags);
     static void DrawArrowheadDiamond(
-        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, const uint32_t flags);
     static void DrawArrowheadDot(
-        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, const uint32_t flags);
     static void DrawArrowheadCrow(
-        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, const uint32_t flags);
     static void DrawArrowheadCurve(
-        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, const uint32_t flags);
     static void DrawLabel(
         const Parameters &params,
         const textlabel_t *const label,
@@ -401,30 +414,8 @@ namespace ImGuiDot
     /// @param colour The colour of the arrowhead.
     /// @param flags The Graphviz flags of the arrowhead.
     static void DrawArrowhead(
-        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, uint32_t flags)
+        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, const uint32_t flags)
     {
-        // Arrowhead flag format in Graphviz (https://graphviz.org/doc/info/arrows.html).
-        //
-        // Up to 4 arrowhead types combined together, 1 byte per arrowhead type.
-        // All bytes share the same format:
-        //    RL0B TTTT
-        // where
-        //   - R = bit set if only the right half of the arrowhead should be drawn;
-        //   - L = bit set if only the left half of the arrowhead should be drawn;
-        //   - B = bit set if the outline of the arrowhead should be drawn;
-        //   - T = 4-bit number indicating the arrowhead type;
-        //   - if neither R nor L is set, the full arrowhead should be drawn;
-        // The arrowhead types are:
-        //   - 0 = none;
-        //   - 1 = normal (triangular);
-        //   - 2 = crow;
-        //   - 3 = tee;
-        //   - 4 = box;
-        //   - 5 = diamond;
-        //   - 6 = dot;
-        //   - 7 = curve;
-        //   - 8 = gap;
-
         const auto shape = static_cast<ArrowheadShapes>(flags & ARROW_SHAPE_MASK);
         switch (shape)
         {
@@ -456,12 +447,18 @@ namespace ImGuiDot
     /// @brief Draw a normal arrowhead (triangular shape).
     /// @copydetails DrawArrowhead
     static void DrawArrowheadNormal(
-        const Parameters &params, const Vec2 &_apex, const Vec2 &_base, const ImU32 colour, uint32_t flags)
+        const Parameters &params, const Vec2 &_apex, const Vec2 &_base, const ImU32 colour, const uint32_t flags)
     {
         static constexpr float SHAPE_WIDTH = 5.0f; // [pixel]
 
+        // The shape is rotated of 180° around itself centre?
+        const bool drawInverted      = flags & ARROW_INVERT_MASK;
+        const bool drawOnlyHalfLeft  = flags & ARROW_HALF_LEFT_MASK;
+        const bool drawOnlyHalfRight = flags & ARROW_HALF_RIGHT_MASK;
+        const bool drawOutline       = flags & ARROW_OUTLINE_MASK;
+
         Vec2 apex, base;
-        if (flags & ARROW_INVERT_MASK)
+        if (drawInverted)
         {
             apex = _base;
             base = _apex;
@@ -484,12 +481,12 @@ namespace ImGuiDot
         Vec2 v1;
         Vec2 v2;
 
-        if (flags & ARROW_HALF_RIGHT_MASK)
+        if (drawOnlyHalfRight)
         {
             v1 = base + n;
             v2 = base;
         }
-        else if (flags & ARROW_HALF_LEFT_MASK)
+        else if (drawOnlyHalfLeft)
         {
             v1 = base;
             v2 = base - n;
@@ -501,15 +498,19 @@ namespace ImGuiDot
         }
 
         ImDrawList *const draw = ImGui::GetWindowDrawList();
-        if (flags & ARROW_OUTLINE_MASK) draw->AddTriangle(v0, v1, v2, colour);
+        if (drawOutline) draw->AddTriangle(v0, v1, v2, colour);
         else draw->AddTriangleFilled(v0, v1, v2, colour);
     }
 
     /// @brief Draw a box arrowhead (box shape).
     /// @copydetails DrawArrowhead
     static void DrawArrowheadBox(
-        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, uint32_t flags)
+        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, const uint32_t flags)
     {
+        const bool drawOnlyHalfLeft  = flags & ARROW_HALF_LEFT_MASK;
+        const bool drawOnlyHalfRight = flags & ARROW_HALF_RIGHT_MASK;
+        const bool drawOutline       = flags & ARROW_OUTLINE_MASK;
+
         // Half of the direction to the arrowhead tip.
         const Vec2 direction = (apex - base) / 2.0f;
         // Perpendicular unit vector.
@@ -518,14 +519,14 @@ namespace ImGuiDot
         // Vertexes of the box.
         Vec2 v0, v1, v2, v3;
 
-        if (flags & ARROW_HALF_RIGHT_MASK)
+        if (drawOnlyHalfRight)
         {
             v0 = apex;
             v1 = apex + n;
             v2 = base + n;
             v3 = base;
         }
-        else if (flags & ARROW_HALF_LEFT_MASK)
+        else if (drawOnlyHalfLeft)
         {
             v0 = apex - n;
             v1 = apex;
@@ -541,15 +542,18 @@ namespace ImGuiDot
         }
 
         ImDrawList *const draw = ImGui::GetWindowDrawList();
-        if (flags & ARROW_OUTLINE_MASK) draw->AddQuad(v0, v1, v2, v3, colour);
+        if (drawOutline) draw->AddQuad(v0, v1, v2, v3, colour);
         else draw->AddQuadFilled(v0, v1, v2, v3, colour);
     }
 
     /// @brief Draw a tee arrowhead (rectangle shape).
     /// @copydetails DrawArrowhead
     static void DrawArrowheadTee(
-        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, uint32_t flags)
+        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, const uint32_t flags)
     {
+        const bool drawOnlyHalfLeft  = flags & ARROW_HALF_LEFT_MASK;
+        const bool drawOnlyHalfRight = flags & ARROW_HALF_RIGHT_MASK;
+
         // Direction to the arrowhead tip.
         const Vec2 direction = (apex - base);
         // Perpendicular unit vector scaled to the proper width.
@@ -563,14 +567,14 @@ namespace ImGuiDot
         // Vertexes of the rectangle.
         Vec2 v0, v1, v2, v3;
 
-        if (flags & ARROW_HALF_RIGHT_MASK)
+        if (drawOnlyHalfRight)
         {
             v0 = a;
             v1 = a + n;
             v2 = b + n;
             v3 = b;
         }
-        else if (flags & ARROW_HALF_LEFT_MASK)
+        else if (drawOnlyHalfLeft)
         {
             v0 = a - n;
             v1 = a;
@@ -596,8 +600,14 @@ namespace ImGuiDot
     /// @brief Draw a diamond arrowhead (rhombus shape).
     /// @copydetails DrawArrowhead
     static void DrawArrowheadDiamond(
-        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, uint32_t flags)
+        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, const uint32_t flags)
     {
+        // The shape is rotated of 180° around itself centre?
+        const bool drawInverted      = flags & ARROW_INVERT_MASK;
+        const bool drawOnlyHalfLeft  = flags & ARROW_HALF_LEFT_MASK;
+        const bool drawOnlyHalfRight = flags & ARROW_HALF_RIGHT_MASK;
+        const bool drawOutline       = flags & ARROW_OUTLINE_MASK;
+
         // Half of the direction to the arrowhead tip.
         const Vec2 direction = (apex - base) / 2.0f;
         // Perpendicular unit vector scaled to include the proper length.
@@ -605,24 +615,24 @@ namespace ImGuiDot
 
         ImDrawList *const draw = ImGui::GetWindowDrawList();
 
-        if (flags & ARROW_HALF_RIGHT_MASK)
+        if (drawOnlyHalfRight)
         {
             // Vertexes of the triangle.
             const Vec2 v0 = apex;
             const Vec2 v1 = apex + n - direction;
             const Vec2 v2 = base;
 
-            if (flags & ARROW_OUTLINE_MASK) draw->AddTriangle(v0, v1, v2, colour);
+            if (drawOutline) draw->AddTriangle(v0, v1, v2, colour);
             else draw->AddTriangleFilled(v0, v1, v2, colour);
         }
-        else if (flags & ARROW_HALF_LEFT_MASK)
+        else if (drawOnlyHalfLeft)
         {
             // Vertexes of the triangle.
             const Vec2 v0 = apex;
             const Vec2 v1 = base;
             const Vec2 v2 = base - n + direction;
 
-            if (flags & ARROW_OUTLINE_MASK) draw->AddTriangle(v0, v1, v2, colour);
+            if (drawOutline) draw->AddTriangle(v0, v1, v2, colour);
             else draw->AddTriangleFilled(v0, v1, v2, colour);
         }
         else
@@ -633,7 +643,7 @@ namespace ImGuiDot
             const Vec2 v2 = base;
             const Vec2 v3 = base - n + direction;
 
-            if (flags & ARROW_OUTLINE_MASK) draw->AddQuad(v0, v1, v2, v3, colour);
+            if (drawOutline) draw->AddQuad(v0, v1, v2, v3, colour);
             else draw->AddQuadFilled(v0, v1, v2, v3, colour);
         }
     }
@@ -641,27 +651,34 @@ namespace ImGuiDot
     /// @brief Draw a dot arrowhead (circle shape).
     /// @copydetails DrawArrowhead
     static void DrawArrowheadDot(
-        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, uint32_t flags)
+        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, const uint32_t flags)
     {
+        const bool drawOutline = flags & ARROW_OUTLINE_MASK;
+
         const Vec2 centre  = (apex + base) / 2.0f;
         const float radius = (apex - base).Length() / 2.0f;
 
         ImDrawList *const draw = ImGui::GetWindowDrawList();
-        if (flags & ARROW_OUTLINE_MASK) draw->AddCircle(centre, radius, colour);
+        if (drawOutline) draw->AddCircle(centre, radius, colour);
         else draw->AddCircleFilled(centre, radius, colour);
     }
 
     /// @brief Draw a crow arrowhead.
     /// @copydetails DrawArrowhead
     static void DrawArrowheadCrow(
-        const Parameters &params, const Vec2 &_apex, const Vec2 &_base, const ImU32 colour, uint32_t flags)
+        const Parameters &params, const Vec2 &_apex, const Vec2 &_base, const ImU32 colour, const uint32_t flags)
     {
         static constexpr float SHAPE_WIDTH = 5.0f; // [pixel]
+
+        // The shape is rotated of 180° around itself centre?
+        const bool drawInverted      = flags & ARROW_INVERT_MASK;
+        const bool drawOnlyHalfLeft  = flags & ARROW_HALF_LEFT_MASK;
+        const bool drawOnlyHalfRight = flags & ARROW_HALF_RIGHT_MASK;
 
         Vec2 apex, base;
 
         // The crow arrowhead are considered not inverted when point to the base instead of apex.
-        if (flags & ARROW_INVERT_MASK)
+        if (drawInverted)
         {
             apex = _apex;
             base = _base;
@@ -690,11 +707,8 @@ namespace ImGuiDot
 
         ImDrawList *const draw = ImGui::GetWindowDrawList();
 
-        const bool onlyHalfLeft  = flags & ARROW_HALF_LEFT_MASK;
-        const bool onlyHalfRight = flags & ARROW_HALF_RIGHT_MASK;
-
-        if (!onlyHalfRight) draw->AddTriangleFilled(v0, v1, v3, colour);
-        if (!onlyHalfLeft) draw->AddTriangleFilled(v0, v2, v3, colour);
+        if (!drawOnlyHalfRight) draw->AddTriangleFilled(v0, v1, v3, colour);
+        if (!drawOnlyHalfLeft) draw->AddTriangleFilled(v0, v2, v3, colour);
 
         draw->PathLineTo(v3);
         draw->PathLineTo(base);
@@ -704,26 +718,31 @@ namespace ImGuiDot
     /// @brief Draw a curve arrowhead (half circle shape).
     /// @copydetails DrawArrowhead
     static void DrawArrowheadCurve(
-        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, uint32_t flags)
+        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, const uint32_t flags)
     {
         const constexpr float PI = 3.141592f;
+
+        // The shape is rotated of 180° around itself centre?
+        const bool drawInverted      = flags & ARROW_INVERT_MASK;
+        const bool drawOnlyHalfLeft  = flags & ARROW_HALF_LEFT_MASK;
+        const bool drawOnlyHalfRight = flags & ARROW_HALF_RIGHT_MASK;
 
         const Vec2 centre  = (apex + base) / 2.0f;
         const float radius = (apex - base).Length() / 2.0f;
 
-        const float angleOffset = (flags & ARROW_INVERT_MASK ? -PI / 2.0f : PI / 2.0f);
-        const float angleBase = atan2f(base.y - centre.y, base.x - centre.x) + angleOffset;
+        const float angleOffset = drawInverted ? -PI / 2.0f : PI / 2.0f;
+        const float angleBase   = atan2f(base.y - centre.y, base.x - centre.x) + angleOffset;
 
         // Angles where the semicircle begin and end.
         float angleStart;
         float angleEnd;
 
-        if (flags & ARROW_HALF_RIGHT_MASK)
+        if (drawOnlyHalfRight)
         {
             angleStart = angleBase + PI / 2.0f;
             angleEnd   = angleBase + PI;
         }
-        else if (flags & ARROW_HALF_LEFT_MASK)
+        else if (drawOnlyHalfLeft)
         {
             angleStart = angleBase;
             angleEnd   = angleBase + PI / 2.0f;
