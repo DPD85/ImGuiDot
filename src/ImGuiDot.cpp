@@ -548,35 +548,44 @@ namespace ImGuiDot
         // Direction to the arrowhead tip.
         const Vec2 direction = (apex - base);
         // Perpendicular unit vector scaled to the proper width.
-        const Vec2 n = Vec2(-direction.y, direction.x) * 1.5f;
+        const Vec2 n = Vec2(-direction.y, direction.x);
+
+        // Centre point at the top of the rectangle.
+        const Vec2 a = apex;
+        // Centre point at the bottom of the rectangle.
+        const Vec2 b = base + direction / 2.0f;
 
         // Vertexes of the rectangle.
         Vec2 v0, v1, v2, v3;
 
         if (flags & ARROW_HALF_RIGHT_MASK)
         {
-            v0 = apex;
-            v1 = apex + n;
-            v2 = base + n;
-            v3 = base;
+            v0 = a;
+            v1 = a + n;
+            v2 = b + n;
+            v3 = b;
         }
         else if (flags & ARROW_HALF_LEFT_MASK)
         {
-            v0 = apex - n;
-            v1 = apex;
-            v2 = base;
-            v3 = base - n;
+            v0 = a - n;
+            v1 = a;
+            v2 = b;
+            v3 = b - n;
         }
         else
         {
-            v0 = apex - n;
-            v1 = apex + n;
-            v2 = base + n;
-            v3 = base - n;
+            v0 = a - n;
+            v1 = a + n;
+            v2 = b + n;
+            v3 = b - n;
         }
 
         ImDrawList *const draw = ImGui::GetWindowDrawList();
         draw->AddQuadFilled(v0, v1, v2, v3, colour);
+
+        draw->PathLineTo(base);
+        draw->PathLineTo(b);
+        draw->PathStroke(colour);
     }
 
     /// @brief Draw a diamond arrowhead (rhombus shape).
