@@ -66,6 +66,8 @@ ImGui::End();
     - tee with half left, half right and solid styles;
     - diamond with half left, half right, outline and solid styles;
     - dot with outline and solid styles;
+    - crow with half left, half right and solid styles;
+    - vee with half left, half right and solid styles;
 - labels:
     - text with support to UTF-8;
     - font size;

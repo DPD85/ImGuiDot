@@ -113,6 +113,8 @@ namespace ImGuiDot
         const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
     static void DrawArrowheadDot(
         const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
+    static void DrawArrowheadCrow(
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
     static void DrawLabel(
         const Parameters &params,
         const textlabel_t *const label,
@@ -436,6 +438,9 @@ namespace ImGuiDot
             case ArrowheadShapes::Dot:
                 DrawArrowheadDot(params, apex, base, colour, flags);
                 break;
+            case ArrowheadShapes::Crow:
+                DrawArrowheadCrow(params, apex, base, colour, flags);
+                break;
             case ArrowheadShapes::Normal:
             default:
                 DrawArrowheadNormal(params, apex, base, colour, flags);
@@ -630,6 +635,56 @@ namespace ImGuiDot
         ImDrawList *const draw = ImGui::GetWindowDrawList();
         if (flags & ARROW_OUTLINE_MASK) draw->AddCircle(centre, radius, colour);
         else draw->AddCircleFilled(centre, radius, colour);
+    }
+
+    /// @brief Draw a dot arrowhead (circle shape).
+    /// @copydetails DrawArrowhead
+    static void DrawArrowheadCrow(
+        const Parameters &params, const Vec2 &_apex, const Vec2 &_base, const ImU32 colour, uint32_t flags)
+    {
+        static constexpr float SHAPE_WIDTH = 5.0f; // [pixel]
+
+        Vec2 apex, base;
+
+        // The crow arrowhead are considered not inverted when point to the base instead of apex.
+        if (flags & ARROW_INVERT_MASK)
+        {
+            apex = _apex;
+            base = _base;
+        }
+        else
+        {
+            apex = _base;
+            base = _apex;
+        }
+
+        // Direction to the arrowhead tip scaled to the half of the shape height.
+        const Vec2 direction = (apex - base) / 2.0f;
+
+        // Perpendicular unit vector scaled to include the proper length.
+        Vec2 n(-direction.y, direction.x);
+        if (!n.Normalize()) return;
+        n *= SHAPE_WIDTH * params.zoom;
+
+        // The shape are draw as two triangles, one is the half left the other the half right.
+
+        const Vec2 v0 = apex;
+        const Vec2 v1 = base + n;
+        const Vec2 v2 = base - n;
+        // Vertex in the middle of the two half.
+        const Vec2 v3 = base + direction;
+
+        ImDrawList *const draw = ImGui::GetWindowDrawList();
+
+        const bool onlyHalfLeft  = flags & ARROW_HALF_LEFT_MASK;
+        const bool onlyHalfRight = flags & ARROW_HALF_RIGHT_MASK;
+
+        if (!onlyHalfRight) draw->AddTriangleFilled(v0, v1, v3, colour);
+        if (!onlyHalfLeft) draw->AddTriangleFilled(v0, v2, v3, colour);
+
+        draw->PathLineTo(v3);
+        draw->PathLineTo(base);
+        draw->PathStroke(colour);
     }
 
     /// @brief Draw a Graphiviz label of a node or an arc or other.
