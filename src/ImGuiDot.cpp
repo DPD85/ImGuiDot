@@ -38,28 +38,26 @@ namespace ImGuiDot
     enum class ArrowheadShapes
     {
         None    = 0,
-        Normal  = 1,
-        Crow    = 2,
+        Normal  = 1, // Inv = inverted normal
+        Crow    = 2, // vee = inverted crow
         Tee     = 3,
         Box     = 4,
         Diamond = 5,
         Dot     = 6,
-        Curve   = 7,
-        Gap     = 8,
+        Curve   = 7, // icurve = inverted curve
+        Gap     = 8, // What is this?
     };
 
     // ----- Global variables to use the Graphviz plugins -----
 
     extern "C"
     {
-        extern gvplugin_library_t gvplugin_core_LTX_library;
         extern gvplugin_library_t gvplugin_dot_layout_LTX_library;
     }
 
-    static constexpr lt_symlist_t gvPlugins[] = { { "gvplugin_core_LTX_library", &gvplugin_core_LTX_library },
-                                                  { "gvplugin_dot_layout_LTX_library",
-                                                    &gvplugin_dot_layout_LTX_library },
-                                                  { 0, 0 } };
+    static constexpr lt_symlist_t gvPlugins[] = {
+        { "gvplugin_dot_layout_LTX_library", &gvplugin_dot_layout_LTX_library }, { 0, 0 }
+    };
 
     // ----- Structure and data used to make Graphviz read from a string not null terminated -----
 
