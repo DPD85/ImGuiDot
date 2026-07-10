@@ -115,6 +115,8 @@ namespace ImGuiDot
         const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
     static void DrawArrowheadCrow(
         const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
+    static void DrawArrowheadCurve(
+        const Parameters &params, const Vec2 &apex, const Vec2 &from, const ImU32 colour, uint32_t flags);
     static void DrawLabel(
         const Parameters &params,
         const textlabel_t *const label,
@@ -441,6 +443,9 @@ namespace ImGuiDot
             case ArrowheadShapes::Crow:
                 DrawArrowheadCrow(params, apex, base, colour, flags);
                 break;
+            case ArrowheadShapes::Curve:
+                DrawArrowheadCurve(params, apex, base, colour, flags);
+                break;
             case ArrowheadShapes::Normal:
             default:
                 DrawArrowheadNormal(params, apex, base, colour, flags);
@@ -646,7 +651,7 @@ namespace ImGuiDot
         else draw->AddCircleFilled(centre, radius, colour);
     }
 
-    /// @brief Draw a dot arrowhead (circle shape).
+    /// @brief Draw a crow arrowhead.
     /// @copydetails DrawArrowhead
     static void DrawArrowheadCrow(
         const Parameters &params, const Vec2 &_apex, const Vec2 &_base, const ImU32 colour, uint32_t flags)
@@ -692,6 +697,48 @@ namespace ImGuiDot
         if (!onlyHalfLeft) draw->AddTriangleFilled(v0, v2, v3, colour);
 
         draw->PathLineTo(v3);
+        draw->PathLineTo(base);
+        draw->PathStroke(colour);
+    }
+
+    /// @brief Draw a curve arrowhead (half circle shape).
+    /// @copydetails DrawArrowhead
+    static void DrawArrowheadCurve(
+        const Parameters &params, const Vec2 &apex, const Vec2 &base, const ImU32 colour, uint32_t flags)
+    {
+        const constexpr float PI = 3.141592f;
+
+        const Vec2 centre  = (apex + base) / 2.0f;
+        const float radius = (apex - base).Length() / 2.0f;
+
+        const float angleOffset = (flags & ARROW_INVERT_MASK ? -PI / 2.0f : PI / 2.0f);
+        const float angleBase = atan2f(base.y - centre.y, base.x - centre.x) + angleOffset;
+
+        // Angles where the semicircle begin and end.
+        float angleStart;
+        float angleEnd;
+
+        if (flags & ARROW_HALF_RIGHT_MASK)
+        {
+            angleStart = angleBase + PI / 2.0f;
+            angleEnd   = angleBase + PI;
+        }
+        else if (flags & ARROW_HALF_LEFT_MASK)
+        {
+            angleStart = angleBase;
+            angleEnd   = angleBase + PI / 2.0f;
+        }
+        else
+        {
+            angleStart = angleBase;
+            angleEnd   = angleBase + PI;
+        }
+
+        ImDrawList *const draw = ImGui::GetWindowDrawList();
+        draw->PathArcTo(centre, radius, angleStart, angleEnd);
+        draw->PathStroke(colour);
+
+        draw->PathLineTo(apex);
         draw->PathLineTo(base);
         draw->PathStroke(colour);
     }
