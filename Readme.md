@@ -54,25 +54,39 @@ ImGui::End();
 - layout engines:
     - dot;
 - shapes:
-    - box, rect and rectangular (the default);
+    - box, rect and rectangle;
+    - triangle and invtriangle;
+    - diamond;
+    - trapezium and invtrapezium;
+    - parallelogram;
+    - house and invhouse;
+    - pentagon;
+    - hexgon;
+    - septagon;
+    - octagon;
+    - square;
+    - egg;
+    - polygon (up to 120 sides);
     - circle;
     - ellipse;
-    - diamond;
+    - oval;
+    - none;
 - arcs: oriented and not oriented;
-- arrowheads:
-    - normal (triangular shape) with half left, half right, outline and solid styles;
-    - box with half left, half right, outline and solid styles;
-    - inv with half left, half right, outline and solid styles;
-    - tee with half left, half right and solid styles;
-    - diamond with half left, half right, outline and solid styles;
-    - dot with outline and solid styles;
-    - crow with half left, half right and solid styles;
-    - vee with half left, half right and solid styles;
-    - curve with half left, half right and outline styles;
-    - icurve with half left, half right and outline styles;
+- arrowheads with the same styles (half left, half right, outline and solid) as per Graphviz:
+    - normal;
+    - box;
+    - inv;
+    - tee;
+    - diamond;
+    - dot;
+    - crow;
+    - vee;
+    - curve;
+    - icurve;
 - labels:
     - text with support to UTF-8;
     - font size;
+    - note: the font family is always the default one set-up into ImGui;
 - stiles:
     - fill and background colours of the shapes, the arcs and the diagram itself (default is transparent);
     - border colour of the shapes (default is black);

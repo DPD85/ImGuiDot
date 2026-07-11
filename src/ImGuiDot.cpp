@@ -10,6 +10,7 @@
 #include <gvc.h>
 #include <gvplugin.h>
 #include <imgui.h>
+#include <iostream>
 #include <limits>
 #include <string>
 
@@ -286,57 +287,113 @@ namespace ImGuiDot
 
         for (Agnode_t *node = agfstnode(params.graph); node; node = agnxtnode(params.graph, node))
         {
-            // Convert from inch to typographic points.
-            Vec2 halfSize(
-                static_cast<float>(ND_width(node)) * 0.5f * PPI, static_cast<float>(ND_height(node)) * 0.5f * PPI);
-
-            // Coordinate of the node centre.
-            const pointf &centre = ND_coord(node);
-
             const Colour borderColour = ExtractColour(node, "color", IM_COL32(0, 0, 0, 255));
             const Colour fillColour   = ExtractColour(node, "fillcolor", IM_COL32(255, 255, 255, 255));
 
             const shape_desc *shape = ND_shape(node);
-            if (std::strcmp(shape->name, "diamond") == 0)
+            if (std::strcmp(shape->name, "ellipse") == 0 || std::strcmp(shape->name, "oval") == 0)
             {
-                const Vec2 top    = ConvertPoint(params, { centre.x, centre.y + halfSize.y });
-                const Vec2 bottom = ConvertPoint(params, { centre.x, centre.y - halfSize.y });
-                const Vec2 left   = ConvertPoint(params, { centre.x - halfSize.x, centre.y });
-                const Vec2 right  = ConvertPoint(params, { centre.x + halfSize.x, centre.y });
+                // Half of the shape size converted from inch to typographic points.
+                const Vec2 halfSize(
+                    static_cast<float>(ND_width(node)) * 0.5f * PPI, static_cast<float>(ND_height(node)) * 0.5f * PPI);
+                const Vec2 radius = halfSize * PIXEL_PER_PPI * params.zoom;
+                const Vec2 centre = ConvertPoint(params, ND_coord(node));
 
-                if (fillColour.isValid) draw->AddQuadFilled(top, right, bottom, left, fillColour.colour);
-                draw->AddQuad(top, right, bottom, left, borderColour.colour);
-            }
-            else if (std::strcmp(shape->name, "ellipse") == 0 || std::strcmp(shape->name, "oval") == 0)
-            {
-                const Vec2 radius        = halfSize * PIXEL_PER_PPI * params.zoom;
-                const Vec2 centreInPixel = ConvertPoint(params, centre);
-
-                if (fillColour.isValid) draw->AddEllipseFilled(centreInPixel, radius, fillColour.colour);
-                draw->AddEllipse(centreInPixel, radius, borderColour.colour);
+                if (fillColour.isValid) draw->AddEllipseFilled(centre, radius, fillColour.colour);
+                draw->AddEllipse(centre, radius, borderColour.colour);
             }
             else if (std::strcmp(shape->name, "circle") == 0)
             {
                 // Graphviz guarantee that the width is always equal to height for the circle shape.
-                const float radius       = halfSize.x * PIXEL_PER_PPI * params.zoom;
-                const Vec2 centreInPixel = ConvertPoint(params, centre);
 
-                if (fillColour.isValid) draw->AddCircleFilled(centreInPixel, radius, fillColour.colour);
-                draw->AddCircle(centreInPixel, radius, borderColour.colour);
+                // Half of the shape width converted from inch to typographic points.
+                const float halfWidth = static_cast<float>(ND_width(node)) * 0.5f * PPI;
+                const float radius    = halfWidth * PIXEL_PER_PPI * params.zoom;
+                const Vec2 centre     = ConvertPoint(params, ND_coord(node));
+
+                if (fillColour.isValid) draw->AddCircleFilled(centre, radius, fillColour.colour);
+                draw->AddCircle(centre, radius, borderColour.colour);
             }
-            // The Default shape is box, rect or rectangle.
+            // Polygon shapes.
+            else if (std::strcmp(shape->name, "box") || std::strcmp(shape->name, "polygon")
+                || std::strcmp(shape->name, "triangle") || std::strcmp(shape->name, "diamond")
+                || std::strcmp(shape->name, "trapezium") || std::strcmp(shape->name, "parallelogram")
+                || std::strcmp(shape->name, "house") || std::strcmp(shape->name, "pentagon")
+                || std::strcmp(shape->name, "hexgon") || std::strcmp(shape->name, "septagon")
+                || std::strcmp(shape->name, "octagon") || std::strcmp(shape->name, "invtriangle")
+                || std::strcmp(shape->name, "invtrapezium") || std::strcmp(shape->name, "invhouse")
+                || std::strcmp(shape->name, "rect") || std::strcmp(shape->name, "rectangle")
+                || std::strcmp(shape->name, "square") || std::strcmp(shape->name, "egg"))
+            {
+                const pointf &centre   = ND_coord(node);
+                const auto *polygon    = static_cast<polygon_t *>(ND_shape_info(node));
+                const pointf *vertices = polygon->vertices;
+
+                // Vertexes of the shape converted in pixel.
+                Vec2 verts[120];
+
+                // Note: the polygon shape can have any numbers of sides because the user can specify it from the code.
+                if (polygon->sides > std::size(verts))
+                {
+                    std::cout << "Warning: The shape have too much sides (the maximums is " << std::size(verts)
+                              << "), skip it.\n";
+                    continue;
+                }
+
+                for (size_t i = 0; i < polygon->sides; ++i)
+                    verts[i] = ConvertPoint(params, centre + vertices[i]);
+
+                if (fillColour.isValid) draw->AddConvexPolyFilled(verts, polygon->sides, fillColour.colour);
+                draw->AddPolyline(verts, polygon->sides, borderColour.colour, ImDrawFlags_Closed, 1.0f);
+            }
+            // None shape or one of the not supported.
+            //
+            // The not supported shapes are:
+            //  - point
+            //  - cylinder (ok, ma diverso dalla documentazione)
+            //  - Mdiamond (identico al diamond)
+            //  - Msquare (identico al square)
+            //  - Mcircle (sides == 2)
+            //  - star (sbaglia perché il poligono è concavo e non convesso)
+            //  - underline ( identico al rettangolo)
+            //  - note ( identico al rettangolo)
+            //  - tab ( identico al rettangolo)
+            //  - folder ( identico al rettangolo)
+            //  - box3d ( identico al rettangolo)
+            //  - component ( identico al rettangolo)
+            //  - promoter ( identico al rettangolo)
+            //  - cds ( identico al rettangolo)
+            //  - terminator ( identico al rettangolo)
+            //  - utr ( identico al rettangolo)
+            //  - primersite ( identico al rettangolo)
+            //  - restrictionsite ( identico al rettangolo)
+            //  - fivepoverhang ( identico al rettangolo)
+            //  - threepoverhang ( identico al rettangolo)
+            //  - noverhang ( identico al rettangolo)
+            //  - assembly ( identico al rettangolo)
+            //  - signature ( identico al rettangolo)
+            //  - insulator ( identico al rettangolo)
+            //  - ribosite ( identico al rettangolo)
+            //  - rnastab ( identico al rettangolo)
+            //  - proteasesite ( identico al rettangolo)
+            //  - proteinstab ( identico al rettangolo)
+            //  - rpromoter ( identico al rettangolo)
+            //  - rarrow ( identico al rettangolo)
+            //  - larrow ( identico al rettangolo)
+            //  - lpromoter ( identico al rettangolo)
+            //
+            //  - because have peripheries == 0: plaintext, plain
+            //  - because have peripheries > 1 : doublecircle, doubleoctagon, tripleoctagon
+            //  - because have sides == 1      : doublecircle, Mcircle
             else
             {
-                const Vec2 min = ConvertPoint(params, centre - halfSize);
-                const Vec2 max = ConvertPoint(params, centre + halfSize);
-
-                if (fillColour.isValid) draw->AddRectFilled(min, max, fillColour.colour);
-                draw->AddRect(min, max, borderColour.colour);
+                // Nothing to draw.
             }
 
             // ----- Draw the label
 
             {
+                const pointf &centre           = ND_coord(node);
                 const textlabel_t *const label = ND_label(node);
                 DrawLabel(params, label, IM_COL32(0, 0, 0, 255), &centre);
             }
