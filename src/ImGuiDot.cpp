@@ -315,7 +315,8 @@ namespace ImGuiDot
                 draw->AddCircle(centre, radius, borderColour.colour);
             }
             // Polygon shapes.
-            else if (std::strcmp(shape->name, "box") || std::strcmp(shape->name, "polygon")
+            else if (
+                std::strcmp(shape->name, "box") || std::strcmp(shape->name, "polygon")
                 || std::strcmp(shape->name, "triangle") || std::strcmp(shape->name, "diamond")
                 || std::strcmp(shape->name, "trapezium") || std::strcmp(shape->name, "parallelogram")
                 || std::strcmp(shape->name, "house") || std::strcmp(shape->name, "pentagon")
@@ -329,13 +330,14 @@ namespace ImGuiDot
                 const auto *polygon    = static_cast<polygon_t *>(ND_shape_info(node));
                 const pointf *vertices = polygon->vertices;
 
+                const size_t MAX_VERTEXES = 120;
                 // Vertexes of the shape converted in pixel.
-                Vec2 verts[120];
+                Vec2 verts[MAX_VERTEXES];
 
                 // Note: the polygon shape can have any numbers of sides because the user can specify it from the code.
-                if (polygon->sides > std::size(verts))
+                if (polygon->sides > MAX_VERTEXES)
                 {
-                    std::cout << "Warning: The shape have too much sides (the maximums is " << std::size(verts)
+                    std::cout << "Warning: The shape have too much sides (the maximums is " << MAX_VERTEXES
                               << "), skip it.\n";
                     continue;
                 }
