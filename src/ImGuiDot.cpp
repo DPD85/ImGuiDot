@@ -10,7 +10,6 @@
 #include <gvc.h>
 #include <gvplugin.h>
 #include <imgui.h>
-#include <iostream>
 #include <limits>
 #include <string>
 
@@ -337,8 +336,10 @@ namespace ImGuiDot
                 // Note: the polygon shape can have any numbers of sides because the user can specify it from the code.
                 if (polygon->sides > MAX_VERTEXES)
                 {
-                    std::cout << "Warning: The shape have too much sides (the maximums is " << MAX_VERTEXES
-                              << "), skip it.\n";
+                    // The shape have too much sides, skip it.
+
+                    // std::cout << "Warning: The shape have too much sides (the maximums is " << MAX_VERTEXES
+                    //           << "), skip it.\n";
                     continue;
                 }
 
