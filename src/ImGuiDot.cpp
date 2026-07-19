@@ -804,16 +804,16 @@ namespace ImGuiDot
     {
         const float diagramHeight = static_cast<float>(GD_bb(params.graph).UR.y);
 
-        // Ribalto il diagramma in orizzontale (intorno all'asse x).
+        // Flip the diagram vertically (around the x-axis).
         Vec2 p(point.x, diagramHeight - point.y);
 
-        // Conversione da punti tipografici a pixel.
+        // Conversion from typographic points to pixels.
         p *= PIXEL_PER_PPI;
 
-        // Fattore di scala del diagramma.
+        // Diagram scale factor.
         p *= params.zoom;
 
-        // Traslazione del punto rispetto alla posizione del diagramma sullo schermo.
+        // Translate the point relative to the diagram's position on screen.
         p += params.diagramPos;
 
         return p;
