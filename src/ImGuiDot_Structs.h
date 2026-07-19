@@ -14,7 +14,7 @@ namespace ImGuiDot
     };
 
     // A 2D vector, it expand the ImVec2 adding some mathematical operators.
-    struct Vec2: public ImVec2
+    struct Vec2: ImVec2
     {
         Vec2()
         {
@@ -22,13 +22,13 @@ namespace ImGuiDot
             y = 0.0f;
         }
 
-        Vec2(float _x, float _y)
+        Vec2(const float _x, const float _y)
         {
             x = _x;
             y = _y;
         }
 
-        Vec2(double _x, double _y)
+        Vec2(const double _x, const double _y)
         {
             x = static_cast<float>(_x);
             y = static_cast<float>(_y);
@@ -68,12 +68,12 @@ namespace ImGuiDot
             return *this;
         }
 
-        Vec2 operator*(float valore) const
+        Vec2 operator*(const float valore) const
         {
             return { x * valore, y * valore };
         }
 
-        Vec2 &operator*=(float valore)
+        Vec2 &operator*=(const float valore)
         {
             x *= valore;
             y *= valore;
@@ -81,12 +81,12 @@ namespace ImGuiDot
             return *this;
         }
 
-        Vec2 operator/(float valore) const
+        Vec2 operator/(const float valore) const
         {
             return { x / valore, y / valore };
         }
 
-        Vec2 &operator/=(float valore)
+        Vec2 &operator/=(const float valore)
         {
             x /= valore;
             y /= valore;
@@ -109,22 +109,22 @@ namespace ImGuiDot
         }
     };
 
-    static Vec2 operator+(const pointf &a, const Vec2 &b)
+    inline Vec2 operator+(const pointf &a, const Vec2 &b)
     {
         return { a.x + b.x, a.y + b.y };
     }
 
-    static Vec2 operator-(const pointf &a, const Vec2 &b)
+    inline Vec2 operator-(const pointf &a, const Vec2 &b)
     {
         return { a.x - b.x, a.y - b.y };
     }
 
-    static Vec2 operator*(const pointf &a, const Vec2 &b)
+    inline Vec2 operator*(const pointf &a, const Vec2 &b)
     {
         return { a.x * b.x, a.y * b.y };
     }
 
-    static Vec2 operator/(const pointf &a, const Vec2 &b)
+    inline Vec2 operator/(const pointf &a, const Vec2 &b)
     {
         return { a.x / b.x, a.y / b.y };
     }

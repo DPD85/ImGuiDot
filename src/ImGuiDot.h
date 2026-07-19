@@ -27,16 +27,16 @@ namespace ImGuiDot
     /// @param endCode The pointer to the end of the buffer with the source code, if null then the string pointed by
     ///                code is assumed to be null terminated.
     /// @param zoom The zoom of the drawn diagram.
-    void Diagram(const char *const code, const char *endCode = nullptr, const float zoom = 1.0f);
+    void Diagram(const char *code, const char *endCode = nullptr, float zoom = 1.0f);
 
     /// @brief Draw a diagram from the provided source code in DOT language.
     /// @param code The string with the source code.
     /// @param zoom The zoom of the drawn diagram.
-    void Diagram(const std::string &code, const float zoom = 1.0f);
+    void Diagram(const std::string &code, float zoom = 1.0f);
 
 #if __cpp_lib_string_view
     /// @copydoc void Diagram(const std::string&, const float)
-    void Diagram(const std::string_view &code, const float zoom = 1.0f);
+    void Diagram(const std::string_view &code, float zoom = 1.0f);
 #endif
 
     // ----- -----
@@ -57,14 +57,14 @@ namespace ImGuiDot
     /// @brief Draw a diagram from the provided source code in DOT language.
     /// @param diagram The state of the diagram to draw.
     /// @param zoom The zoom of the drawn diagram.
-    void Draw(const DiagramState &diagram, const float zoom);
+    void Draw(const DiagramState &diagram, float zoom);
 
     /// @brief Create or update the state of a diagram preparing it to be draw later.
     /// @param diagram The state to be create or updated.
     /// @param code The pointer to the begin of the buffer with the source code.
     /// @param endCode The pointer to the end of the buffer with the source code, if null then the string pointed by
     ///                code is assumed to be null terminated.
-    void Update(DiagramState &diagram, const char *const code, const char *endCode = nullptr);
+    void Update(DiagramState &diagram, const char *code, const char *endCode = nullptr);
 
     /// @brief Create or update the state of a diagram preparing it to be draw later.
     /// @param diagram The state to be create or updated.

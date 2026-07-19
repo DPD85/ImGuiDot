@@ -35,7 +35,10 @@ set(IMGUI_TARGET "ImGui" CACHE STRING "Name of the ImGui target to link against.
 # ----- Graphviz -----
 
 set(CMAKE_FOLDER_OLD "${CMAKE_FOLDER}")
-set(CMAKE_FOLDER "${CMAKE_FOLDER}/Graphviz")
+if(DEFINED CMAKE_FOLDER AND NOT CMAKE_FOLDER STREQUAL "")
+    set(CMAKE_FOLDER "${CMAKE_FOLDER}/")
+endif()
+set(CMAKE_FOLDER "${CMAKE_FOLDER}Graphviz")
 
 CPMAddPackage(
     NAME Graphviz
