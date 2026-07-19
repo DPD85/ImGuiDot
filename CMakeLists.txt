@@ -169,6 +169,8 @@ target_link_libraries(ImGui-Dot
         gvplugin_dot_layout
 )
 
+target_compile_options(ImGui-Dot PRIVATE $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -pedantic-errors>)
+
 if(MSVC)
     target_compile_options(ImGui-Dot PRIVATE "/utf-8")
 endif()
