@@ -1,9 +1,10 @@
 ﻿#pragma once
 
+#include <imgui.h>
 #include <string>
 #include <string_view>
 
-typedef struct Agraph_s Agraph_t;
+using Agraph_t = struct Agraph_s;
 
 namespace ImGuiDot
 {
@@ -27,15 +28,20 @@ namespace ImGuiDot
     /// @param endCode The pointer to the end of the buffer with the source code, if null then the string pointed by
     ///                code is assumed to be null terminated.
     /// @param zoom The zoom of the drawn diagram.
-    void Diagram(const char *code, const char *endCode = nullptr, float zoom = 1.0f);
+    /// @param pivot Centre on this point, for example use (0.5, 0.5) to centre vertically and horizontally. The default
+    ///              value mean top-left alignment.
+    void Diagram(
+        const char *code, const char *endCode = nullptr, float zoom = 1.0f, const ImVec2 &pivot = ImVec2(0, 0));
 
     /// @brief Draw a diagram from the provided source code in DOT language.
     /// @param code The string with the source code.
     /// @param zoom The zoom of the drawn diagram.
-    void Diagram(const std::string &code, float zoom = 1.0f);
+    /// @param pivot Centre on this point, for example use (0.5, 0.5) to centre vertically and horizontally. The default
+    ///              value mean top-left alignment.
+    void Diagram(const std::string &code, float zoom = 1.0f, const ImVec2 &pivot = ImVec2(0, 0));
 
     /// @copydoc void Diagram(const std::string&, const float)
-    void Diagram(const std::string_view &code, float zoom = 1.0f);
+    void Diagram(const std::string_view &code, float zoom = 1.0f, const ImVec2 &pivot = ImVec2(0, 0));
 
     // ----- -----
 
@@ -55,7 +61,9 @@ namespace ImGuiDot
     /// @brief Draw a diagram from the provided source code in DOT language.
     /// @param diagram The state of the diagram to draw.
     /// @param zoom The zoom of the drawn diagram.
-    void Draw(const DiagramState &diagram, float zoom);
+    /// @param pivot Centre on this point, for example use (0.5, 0.5) to centre vertically and horizontally. The default
+    ///              value mean top-left alignment.
+    void Draw(const DiagramState &diagram, float zoom = 1.0f, const ImVec2 &pivot = ImVec2(0, 0));
 
     /// @brief Create or update the state of a diagram preparing it to be draw later.
     /// @param diagram The state to be create or updated.

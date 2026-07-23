@@ -151,23 +151,23 @@ namespace ImGuiDot
         gvFreeContext(gvContext);
     }
 
-    void Diagram(const char *const code, const char *endCode, const float zoom)
+    void Diagram(const char *const code, const char *endCode, const float zoom, const ImVec2 &pivot)
     {
         DiagramState diagram;
 
         Update(diagram, code, endCode);
-        Draw(diagram, zoom);
+        Draw(diagram, zoom, pivot);
         CleanUp(diagram);
     }
 
-    void Diagram(const std::string &code, const float zoom)
+    void Diagram(const std::string &code, const float zoom, const ImVec2 &pivot)
     {
-        Diagram(code.data(), code.data() + code.size(), zoom);
+        Diagram(code.data(), code.data() + code.size(), zoom, pivot);
     }
 
-    void Diagram(const std::string_view &code, const float zoom)
+    void Diagram(const std::string_view &code, const float zoom, const ImVec2 &pivot)
     {
-        Diagram(code.data(), code.data() + code.size(), zoom);
+        Diagram(code.data(), code.data() + code.size(), zoom, pivot);
     }
 
     void Update(DiagramState &diagram, const char *const code, const char *endCode)
@@ -221,7 +221,7 @@ namespace ImGuiDot
         }
     }
 
-    void Draw(const DiagramState &diagram, const float zoom)
+    void Draw(const DiagramState &diagram, const float zoom, const ImVec2 &pivot)
     {
         if (diagram.graph == nullptr) return;
 
@@ -231,7 +231,6 @@ namespace ImGuiDot
 
         ImDrawList *const draw = ImGui::GetWindowDrawList();
         const Vec2 cursorPos   = ImGui::GetCursorScreenPos();
-        // const Vec2 spaceAvail  = ImGui::GetContentRegionAvail();
 
         // GD_bb(graph) give the diagram bounding box where:
         //   .LL = bounding box coordinate of the min vertex.
@@ -240,16 +239,16 @@ namespace ImGuiDot
 
         // ----- Diagram alignment
 
-        // Alignment to the centre.
-        // params.diagramPos.x = cursorPos.x + (spaceAvail.x - size.x) / 2.0f;
-        // params.diagramPos.y = cursorPos.y;
+        {
+            params.diagramPos = cursorPos;
 
-        // Alignment to the right.
-        // params.diagramPos.x = cursorPos.x + (spaceAvail.x - size.x);
-        // params.diagramPos.y = cursorPos.y;
+            const Vec2 spaceAvail = ImGui::GetContentRegionAvail();
+            const Vec2 space      = spaceAvail - size;
 
-        // Alignment to the left.
-        params.diagramPos = cursorPos;
+            // Do the alignment only if there is enough space.
+            if (space.x > 0) params.diagramPos.x += space.x * pivot.x;
+            if (space.y > 0) params.diagramPos.y += space.y * pivot.y;
+        }
 
         // ----- Draw diagram background
 

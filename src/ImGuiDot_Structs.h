@@ -81,6 +81,19 @@ namespace ImGuiDot
             return *this;
         }
 
+        Vec2 operator*(const Vec2 &valore) const
+        {
+            return { x * valore.x, y * valore.y };
+        }
+
+        Vec2 &operator*=(const Vec2 &valore)
+        {
+            x *= valore.x;
+            y *= valore.y;
+
+            return *this;
+        }
+
         Vec2 operator/(const float valore) const
         {
             return { x / valore, y / valore };
