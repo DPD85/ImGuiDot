@@ -94,6 +94,7 @@ namespace ImGuiDot
             return *this;
         }
 
+        [[nodiscard]]
         float Length() const
         {
             return std::sqrtf(x * x + y * y);

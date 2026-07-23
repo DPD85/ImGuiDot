@@ -314,15 +314,15 @@ namespace ImGuiDot
             }
             // Polygon shapes.
             else if (
-                std::strcmp(shape->name, "box") || std::strcmp(shape->name, "polygon")
-                || std::strcmp(shape->name, "triangle") || std::strcmp(shape->name, "diamond")
-                || std::strcmp(shape->name, "trapezium") || std::strcmp(shape->name, "parallelogram")
-                || std::strcmp(shape->name, "house") || std::strcmp(shape->name, "pentagon")
-                || std::strcmp(shape->name, "hexgon") || std::strcmp(shape->name, "septagon")
-                || std::strcmp(shape->name, "octagon") || std::strcmp(shape->name, "invtriangle")
-                || std::strcmp(shape->name, "invtrapezium") || std::strcmp(shape->name, "invhouse")
-                || std::strcmp(shape->name, "rect") || std::strcmp(shape->name, "rectangle")
-                || std::strcmp(shape->name, "square") || std::strcmp(shape->name, "egg"))
+                std::strcmp(shape->name, "box") == 0 || std::strcmp(shape->name, "polygon") == 0
+                || std::strcmp(shape->name, "triangle") == 0 || std::strcmp(shape->name, "diamond") == 0
+                || std::strcmp(shape->name, "trapezium") == 0 || std::strcmp(shape->name, "parallelogram") == 0
+                || std::strcmp(shape->name, "house") == 0 || std::strcmp(shape->name, "pentagon") == 0
+                || std::strcmp(shape->name, "hexgon") == 0 || std::strcmp(shape->name, "septagon") == 0
+                || std::strcmp(shape->name, "octagon") == 0 || std::strcmp(shape->name, "invtriangle") == 0
+                || std::strcmp(shape->name, "invtrapezium") == 0 || std::strcmp(shape->name, "invhouse") == 0
+                || std::strcmp(shape->name, "rect") == 0 || std::strcmp(shape->name, "rectangle") == 0
+                || std::strcmp(shape->name, "square") == 0 || std::strcmp(shape->name, "egg") == 0)
             {
                 const pointf &centre   = ND_coord(node);
                 const auto *polygon    = static_cast<polygon_t *>(ND_shape_info(node));
