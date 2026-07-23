@@ -7,10 +7,8 @@ It uses Graphviz 15.1.0 to parse the DOT language and compute the layout, then i
 
 ## Minimum requirements
 
-- language versions:
-    - C++11 to use the ImGuiDot library;
-    - C17 and C++17 to build Graphviz;
-- a compiler supporting the C17 and C++17 language versions.
+- a compiler supporting the C17 and C++17 language versions;
+- CMake 3.25.
 
 Here is an example of a stack compatible with the library:
 - GCC from the 12 to the 14.x version on Linux Debian 13*;
