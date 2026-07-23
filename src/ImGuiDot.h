@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <string>
-#include <version>
+#include <string_view>
 
 typedef struct Agraph_s Agraph_t;
 
@@ -34,10 +34,8 @@ namespace ImGuiDot
     /// @param zoom The zoom of the drawn diagram.
     void Diagram(const std::string &code, float zoom = 1.0f);
 
-#if __cpp_lib_string_view
     /// @copydoc void Diagram(const std::string&, const float)
     void Diagram(const std::string_view &code, float zoom = 1.0f);
-#endif
 
     // ----- -----
 
@@ -71,10 +69,8 @@ namespace ImGuiDot
     /// @param code The string with the source code.
     void Update(DiagramState &diagram, const std::string &code);
 
-#if __cpp_lib_string_view
     /// @copydoc void Update(DiagramState&, const std::string&)
     void Update(DiagramState &diagram, const std::string_view &code);
-#endif
 
     /// @brief Clean up the state of a diagram freeing all the used resources.
     /// @param diagram The state to be cleaned up.

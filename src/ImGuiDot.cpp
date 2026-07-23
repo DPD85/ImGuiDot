@@ -11,7 +11,6 @@
 #include <gvplugin.h>
 #include <imgui.h>
 #include <limits>
-#include <string>
 
 namespace ImGuiDot
 {
@@ -49,7 +48,7 @@ namespace ImGuiDot
 
     namespace
     {
-        enum class ArrowheadShapes
+        enum class ArrowheadShapes : std::uint8_t
         {
             None    = 0,
             Normal  = 1, // Inv = inverted normal
@@ -81,8 +80,8 @@ namespace ImGuiDot
         struct MemoryData
         {
             const char *data;
-            size_t len;
-            size_t cur;
+            int len;
+            int cur;
         };
     }
 
@@ -93,7 +92,7 @@ namespace ImGuiDot
         auto *memoryData = static_cast<MemoryData *>(chan);
         if (memoryData->cur >= memoryData->len) return 0;
 
-        const size_t bytesToCopy = std::min<size_t>(memoryData->len - memoryData->cur, bufsize);
+        const int bytesToCopy = std::min(memoryData->len - memoryData->cur, bufsize);
 
         memcpy(buf, memoryData->data + memoryData->cur, bytesToCopy);
 
@@ -166,12 +165,10 @@ namespace ImGuiDot
         Diagram(code.data(), code.data() + code.size(), zoom);
     }
 
-#if __cpp_lib_string_view
     void Diagram(const std::string_view &code, const float zoom)
     {
         Diagram(code.data(), code.data() + code.size(), zoom);
     }
-#endif
 
     void Update(DiagramState &diagram, const char *const code, const char *endCode)
     {
@@ -179,7 +176,7 @@ namespace ImGuiDot
 
         if (endCode == nullptr) endCode = code + std::strlen(code);
 
-        MemoryData input{ /*.data =*/code, /*.len =*/static_cast<size_t>(endCode - code), /*.cur =*/0 };
+        MemoryData input{ /*.data =*/code, /*.len =*/static_cast<int>(endCode - code), /*.cur =*/0 };
         Agiodisc_t iodisc{
             /*.afread = */ MemoryReader,
             /*.putstr = */ nullptr, // used only by gvRender() and the last one is not uses.
@@ -209,12 +206,10 @@ namespace ImGuiDot
         Update(diagram, code.data(), code.data() + code.size());
     }
 
-#if __cpp_lib_string_view
     void Update(DiagramState &diagram, const std::string_view &code)
     {
         Update(diagram, code.data(), code.data() + code.size());
     }
-#endif
 
     void CleanUp(DiagramState &diagram)
     {
@@ -850,7 +845,7 @@ namespace ImGuiDot
     /// @return The point's coordinates converted to pixels and flipped on the x-axis (upside-down).
     static Vec2 ConvertPoint(const Parameters &params, const Vec2 &point)
     {
-        const float diagramHeight = static_cast<float>(GD_bb(params.graph).UR.y);
+        const auto diagramHeight = static_cast<float>(GD_bb(params.graph).UR.y);
 
         // Flip the diagram vertically (around the x-axis).
         Vec2 p(point.x, diagramHeight - point.y);
@@ -893,6 +888,7 @@ namespace ImGuiDot
         gvcolor_t coloreGV;
         if (colorxlate(colour, &coloreGV, RGBA_BYTE) == COLOR_OK)
             return { IM_COL32(coloreGV.u.rgba[0], coloreGV.u.rgba[1], coloreGV.u.rgba[2], coloreGV.u.rgba[3]), true };
-        else return { defaultColour, false };
+
+        return { defaultColour, false };
     }
 }
