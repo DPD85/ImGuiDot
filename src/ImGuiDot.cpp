@@ -322,25 +322,25 @@ namespace ImGuiDot
                 const auto *polygon    = static_cast<polygon_t *>(ND_shape_info(node));
                 const pointf *vertices = polygon->vertices;
 
-                const size_t MAX_VERTEXES = 120;
                 // Vertexes of the shape converted in pixel.
-                Vec2 verts[MAX_VERTEXES];
+                Vec2 shapeVertices[120];
 
                 // Note: the polygon shape can have any numbers of sides because the user can specify it from the code.
-                if (polygon->sides > MAX_VERTEXES)
+                if (polygon->sides > std::size(shapeVertices))
                 {
                     // The shape have too much sides, skip it.
 
-                    // std::cout << "Warning: The shape have too much sides (the maximums is " << MAX_VERTEXES
+                    // std::cout << "Warning: The shape have too much sides (the maximums is "
+                    //           << std::size(shapeVertices)
                     //           << "), skip it.\n";
                     continue;
                 }
 
                 for (size_t i = 0; i < polygon->sides; ++i)
-                    verts[i] = ConvertPoint(params, centre + vertices[i]);
+                    shapeVertices[i] = ConvertPoint(params, centre + vertices[i]);
 
-                if (fillColour.isValid) draw->AddConvexPolyFilled(verts, polygon->sides, fillColour.colour);
-                draw->AddPolyline(verts, polygon->sides, borderColour.colour, ImDrawFlags_Closed, 1.0f);
+                if (fillColour.isValid) draw->AddConvexPolyFilled(shapeVertices, polygon->sides, fillColour.colour);
+                draw->AddPolyline(shapeVertices, polygon->sides, borderColour.colour, ImDrawFlags_Closed, 1.0f);
             }
             // None shape or one of the not supported.
             //
