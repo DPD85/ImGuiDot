@@ -85,6 +85,7 @@ ImGui::End();
     - text with support to UTF-8;
     - font size;
     - note: the font family is always the default one set-up into ImGui;
+    - note: it's always centred into the shape;
 - stiles:
     - fill and background colours of the shapes, the arcs and the diagram itself (default is transparent);
     - border colour of the shapes (default is black);
@@ -113,7 +114,7 @@ ImGuiDot::Update(diagramState, dotSourceCode);
 // Inside the rendering loop, executed each frame, where you want to render the diagram.
 ImGuiDot::Draw(diagramState);
 
-// Before to termivate the program or when the diagram need to be detroyed.
+// Before to terminate the program or when the diagram need to be destroyed.
 ImGuiDot::CleanUp(diagramState);
 ```
 
