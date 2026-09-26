@@ -265,6 +265,12 @@ namespace ImGuiDot
         // -----
 
         DrawNodes(params);
+
+        // ----- Reserve the diagram space in the layout
+
+        // The draw list does not move the cursor: without an item the next widget would be placed over the diagram and
+        // the window would not count the diagram in its content size (so no scrollbars).
+        ImGui::Dummy(params.diagramPos + size - cursorPos);
     }
 
     // ----- -----
