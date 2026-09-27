@@ -110,7 +110,7 @@ namespace ImGuiDot
         [[nodiscard]]
         float Length() const
         {
-            return std::sqrtf(x * x + y * y);
+            return std::sqrt(x * x + y * y);
         }
 
         bool Normalize()
