@@ -133,7 +133,11 @@ namespace ImGuiDot
         const Parameters &params, const Vec2 &apex, const Vec2 &base, ImU32 colour, uint32_t flags);
     static void DrawArrowheadCurve(const Vec2 &apex, const Vec2 &base, ImU32 colour, uint32_t flags);
     static void DrawLabel(
-        const Parameters &params, const textlabel_t *label, ImU32 defaultColour, const pointf *position = nullptr);
+        const Parameters &params,
+        const textlabel_t *label,
+        void *owner,
+        ImU32 defaultColour,
+        const pointf *position = nullptr);
     static Vec2 ConvertPoint(const Parameters &params, const Vec2 &point);
     static Colour ExtractColour(void *object, const char *name, ImColor defaultColour);
     static Colour ExtractColour(const char *colour, ImColor defaultColour);
@@ -397,7 +401,7 @@ namespace ImGuiDot
             {
                 const pointf &centre           = ND_coord(node);
                 const textlabel_t *const label = ND_label(node);
-                DrawLabel(params, label, IM_COL32(0, 0, 0, 255), &centre);
+                DrawLabel(params, label, node, IM_COL32(0, 0, 0, 255), &centre);
             }
 
             // -----
@@ -459,7 +463,7 @@ namespace ImGuiDot
 
             {
                 const textlabel_t *const label = ED_label(arc);
-                DrawLabel(params, label, IM_COL32(0, 0, 0, 255));
+                DrawLabel(params, label, arc, IM_COL32(0, 0, 0, 255));
             }
         }
     }
@@ -815,12 +819,14 @@ namespace ImGuiDot
     /// @brief Draw a Graphiviz label of a node or an arc or other.
     /// @param params The internal state and parameters to use.
     /// @param label The Graphviz label to draw.
-    /// @param defaultColour The colour to use if the label it self don't have one.
+    /// @param owner The Graphviz object (node, arc) the label belongs to, its fontcolor attribute gives the colour.
+    /// @param defaultColour The colour to use if the owner does not set one.
     /// @param position Optional coordinate of the label position, they are used when the label does not provide a
     ///                 position by itself (like the nodes labels for example). [pixel]
     static void DrawLabel(
         const Parameters &params,
         const textlabel_t *const label,
+        void *const owner,
         const ImU32 defaultColour,
         const pointf *const position)
     {
@@ -831,7 +837,9 @@ namespace ImGuiDot
         const float fontSize = static_cast<float>(label->fontsize) * params.zoom;
         const Vec2 textSize  = font->CalcTextSizeA(fontSize, std::numeric_limits<float>::max(), -1.0f, label->text);
 
-        const Colour colour = ExtractColour(label->fontcolor, defaultColour);
+        // The colour is read from the owner's attribute and not from label->fontcolor: the layout fills the latter with
+        // "black" when the source code does not set it, which would hide the default colour.
+        const Colour colour = ExtractColour(owner, "fontcolor", defaultColour);
 
         Vec2 pos;
 
