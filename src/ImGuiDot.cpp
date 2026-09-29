@@ -829,19 +829,50 @@ namespace ImGuiDot
 
         ImFont *const font   = ImGui::GetIO().Fonts->Fonts[0];
         const float fontSize = static_cast<float>(label->fontsize) * params.zoom;
-        const Vec2 textSize  = font->CalcTextSizeA(fontSize, std::numeric_limits<float>::max(), -1.0f, label->text);
 
         const Colour colour = ExtractColour(label->fontcolor, defaultColour);
 
-        Vec2 pos;
-
-        if (label->set) pos = ConvertPoint(params, label->pos);
-        else pos = ConvertPoint(params, *position);
-
-        pos -= textSize / 2.0f;
+        // Centre of the label. [pixel]
+        const Vec2 centre = label->set ? ConvertPoint(params, label->pos) : ConvertPoint(params, *position);
 
         ImDrawList *const draw = ImGui::GetWindowDrawList();
-        draw->AddText(font, fontSize, pos, colour.colour, label->text);
+
+        // The layout splits a plain text label into lines at the \n, \l and \r escapes (centred, left and right
+        // justified), label->text keeps the escapes: draw the lines one by one. An HTML label has no lines here, it is
+        // drawn as a single line.
+        const textspan_t *const lines = label->html ? nullptr : label->u.txt.span;
+        const size_t lineCount        = label->html ? 0 : label->u.txt.nspans;
+
+        if (lines == nullptr || lineCount == 0)
+        {
+            const Vec2 textSize = font->CalcTextSizeA(fontSize, std::numeric_limits<float>::max(), -1.0f, label->text);
+            draw->AddText(font, fontSize, centre - textSize / 2.0f, colour.colour, label->text);
+            return;
+        }
+
+        // Size of the whole block of lines: the widest line and the sum of the line heights. [pixel]
+        Vec2 blockSize;
+        for (size_t i = 0; i < lineCount; ++i)
+        {
+            const char *const text = lines[i].str ? lines[i].str : "";
+            const Vec2 lineSize    = font->CalcTextSizeA(fontSize, std::numeric_limits<float>::max(), -1.0f, text);
+            blockSize.x            = std::max(blockSize.x, lineSize.x);
+            blockSize.y += lineSize.y;
+        }
+
+        Vec2 lineTopLeft = centre - blockSize / 2.0f;
+        for (size_t i = 0; i < lineCount; ++i)
+        {
+            const char *const text = lines[i].str ? lines[i].str : "";
+            const Vec2 lineSize    = font->CalcTextSizeA(fontSize, std::numeric_limits<float>::max(), -1.0f, text);
+
+            float x = centre.x - lineSize.x / 2.0f; // 'n': centred.
+            if (lines[i].just == 'l') x = lineTopLeft.x;
+            else if (lines[i].just == 'r') x = lineTopLeft.x + blockSize.x - lineSize.x;
+
+            draw->AddText(font, fontSize, Vec2(x, lineTopLeft.y), colour.colour, text);
+            lineTopLeft.y += lineSize.y;
+        }
     }
 
     /// @brief Converts a point from Graphviz's coordinate system to pixels (ImGui's coordinate system).
