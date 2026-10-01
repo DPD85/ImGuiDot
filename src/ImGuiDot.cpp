@@ -137,12 +137,11 @@ namespace ImGuiDot
         const Parameters &params,
         const textlabel_t *label,
         void *owner,
-        ImU32 styleColour,
         const pointf *position = nullptr);
     static Vec2 ConvertPoint(const Parameters &params, const Vec2 &point);
     static ImU32 ExtractColour(void *object, const char *name, ImU32 styleColour);
-    static bool IsColourVisible(ImU32 colour);
     static ImU32 ExtractColour(const char *colour, ImU32 styleColour);
+    static inline bool IsColourVisible(ImU32 colour);
 
     // ----- Style -----
 
@@ -192,10 +191,15 @@ namespace ImGuiDot
             case StyleColour_ShapeBorder:
             case StyleColour_Arc:
                 return ImGui::GetStyleColorVec4(ImGuiCol_Border);
-            default:
-                // The backgrounds and the diagram border have no ImGui counterpart: transparent, as in Graphviz.
+            case StyleColour_ShapeBackground:
+            case StyleColour_DiagramBackground:
+            case StyleColour_DiagramBorder:
+                // No ImGui counterpart: transparent, as in Graphviz.
                 return ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
         }
+
+        // Not reached: the index is checked above.
+        return ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
     }
 
     ImU32 GetStyleColourU32(const StyleColour index)
@@ -213,8 +217,13 @@ namespace ImGuiDot
 
     void PopStyleColour(int count)
     {
-        IM_ASSERT(count <= colourStack.Size && "Calling PopStyleColour() too many times!");
-        if (count > colourStack.Size) count = colourStack.Size;
+        // As ImGui::PopStyleColor(): the assertion reports the misuse in debug, the clamp keeps the release build from
+        // reading past the stack.
+        if (count > colourStack.Size)
+        {
+            IM_ASSERT(false && "Calling PopStyleColour() too many times!");
+            count = colourStack.Size;
+        }
 
         for (; count > 0; --count)
         {
@@ -312,7 +321,8 @@ namespace ImGuiDot
         if (diagram.graph == nullptr) return;
 
         Parameters params{ /*.graph =*/diagram.graph, /*.zoom =*/zoom, /* .diagramPos =*/{}, /*.colours =*/{} };
-        for (int i = 0; i < StyleColour_Count; ++i) params.colours[i] = GetStyleColourU32(i);
+        for (size_t i = 0; i < std::size(params.colours); ++i)
+            params.colours[i] = GetStyleColourU32(static_cast<StyleColour>(i));
 
         // -----
 
@@ -337,7 +347,7 @@ namespace ImGuiDot
             if (space.y > 0) params.diagramPos.y += space.y * pivot.y;
         }
 
-        // ----- Draw diagram background
+        // ----- Draw diagram background and border
 
         const Vec2 diagramMin = params.diagramPos;
         const Vec2 diagramMax = params.diagramPos + size;
@@ -347,14 +357,12 @@ namespace ImGuiDot
             if (IsColourVisible(colour)) draw->AddRectFilled(diagramMin, diagramMax, colour);
         }
 
+        if (IsColourVisible(params.colours[StyleColour_DiagramBorder]))
+            draw->AddRect(diagramMin, diagramMax, params.colours[StyleColour_DiagramBorder]);
+
         // -----
 
         DrawNodes(params);
-
-        // ----- Draw diagram border
-
-        if (IsColourVisible(params.colours[StyleColour_DiagramBorder]))
-            draw->AddRect(diagramMin, diagramMax, params.colours[StyleColour_DiagramBorder]);
 
         // ----- Reserve the diagram space in the layout
 
@@ -488,7 +496,7 @@ namespace ImGuiDot
             {
                 const pointf &centre           = ND_coord(node);
                 const textlabel_t *const label = ND_label(node);
-                DrawLabel(params, label, node, params.colours[StyleColour_Label], &centre);
+                DrawLabel(params, label, node, &centre);
             }
 
             // -----
@@ -550,7 +558,7 @@ namespace ImGuiDot
 
             {
                 const textlabel_t *const label = ED_label(arc);
-                DrawLabel(params, label, arc, params.colours[StyleColour_Label]);
+                DrawLabel(params, label, arc);
             }
         }
     }
@@ -906,15 +914,14 @@ namespace ImGuiDot
     /// @brief Draw a Graphiviz label of a node or an arc or other.
     /// @param params The internal state and parameters to use.
     /// @param label The Graphviz label to draw.
-    /// @param owner The Graphviz object (node, arc) the label belongs to, its fontcolor attribute gives the colour.
-    /// @param styleColour The colour to use if the owner does not set one.
+    /// @param owner The Graphviz object (node, arc) the label belongs to, its fontcolor attribute gives the
+    ///              colour (otherwise the label colour of the style).
     /// @param position Optional coordinate of the label position, they are used when the label does not provide a
     ///                 position by itself (like the nodes labels for example). [pixel]
     static void DrawLabel(
         const Parameters &params,
         const textlabel_t *const label,
         void *const owner,
-        const ImU32 styleColour,
         const pointf *const position)
     {
         if (!label || !label->text || label->text[0] == '\0') return;
@@ -926,7 +933,7 @@ namespace ImGuiDot
 
         // The colour is read from the owner's attribute and not from label->fontcolor: the layout fills the latter with
         // "black" when the source code does not set it, which would hide the default colour.
-        const ImU32 colour = ExtractColour(owner, "fontcolor", styleColour);
+        const ImU32 colour = ExtractColour(owner, "fontcolor", params.colours[StyleColour_Label]);
 
         Vec2 pos;
 
@@ -993,7 +1000,7 @@ namespace ImGuiDot
     /// @brief Tells if a colour is not fully transparent, so if drawing with it is useful.
     /// @param colour The colour to check.
     /// @return True if the colour alpha is not zero.
-    static bool IsColourVisible(const ImU32 colour)
+    static inline bool IsColourVisible(const ImU32 colour)
     {
         return (colour & IM_COL32_A_MASK) != 0;
     }
