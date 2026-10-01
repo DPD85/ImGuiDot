@@ -3,6 +3,7 @@
 #include <imgui.h>
 #include <string>
 #include <string_view>
+#include <type_traits>
 
 using Agraph_t = struct Agraph_s;
 
@@ -23,8 +24,10 @@ namespace ImGuiDot
     // ----- -----
     // Style.
 
-    /// @brief Special colour value: the colour follows the ImGui style currently in use, see GetStyleColourVec4().
-#define IMGUIDOT_AUTO_COLOUR ImVec4(0.0f, 0.0f, 0.0f, -1.0f)
+    /// @brief Special colour value: the item takes its colour from the ImGui style in use, the colour of each item is
+    ///        listed in StyleColour_ (Auto). The value is resolved every time the colour is read, so the item follows
+    ///        the ImGui style when it changes. It is marked by a negative alpha, which no real colour has.
+    constexpr ImColor AUTO_COLOUR(0.0f, 0.0f, 0.0f, -1.0f);
 
     /// @brief The items of a diagram with a colour in the style.
     enum StyleColour_ : int
@@ -37,15 +40,15 @@ namespace ImGuiDot
         StyleColour_DiagramBorder,     ///< Border around the diagram. Default: transparent.
         StyleColour_Count
     };
-    using StyleColour = int;
+    using StyleColour = std::underlying_type_t<StyleColour_>;
 
     /// @brief The style of the diagrams, modelled on ImGuiStyle.
     /// @remark The colours set in the DOT source code (color, fillcolor, fontcolor, bgcolor) take precedence: the style
     ///         gives the colours of the items that the source code leaves unspecified.
     struct Style
     {
-        /// @brief The colours of the items, use IMGUIDOT_AUTO_COLOUR to follow the ImGui style.
-        ImVec4 colours[StyleColour_Count];
+        /// @brief The colours of the items, use AUTO_COLOUR to follow the ImGui style.
+        ImColor colours[StyleColour_Count];
 
         Style();
     };
@@ -53,12 +56,12 @@ namespace ImGuiDot
     /// @brief Get the style in use, modify it to change the look of all the diagrams drawn after.
     Style &GetStyle();
 
-    /// @brief Get a colour of the style, with IMGUIDOT_AUTO_COLOUR resolved from the ImGui style in use.
+    /// @brief Get a colour of the style, with AUTO_COLOUR resolved from the ImGui style in use.
     /// @param index The item.
     /// @return The colour, without the global alpha of the ImGui style applied.
     ImVec4 GetStyleColourVec4(StyleColour index);
 
-    /// @brief Get a colour of the style, with IMGUIDOT_AUTO_COLOUR resolved from the ImGui style in use.
+    /// @brief Get a colour of the style, with AUTO_COLOUR resolved from the ImGui style in use.
     /// @param index The item.
     /// @return The colour, with the global alpha of the ImGui style applied (as ImGui::GetColorU32() does).
     ImU32 GetStyleColourU32(StyleColour index);
@@ -66,10 +69,7 @@ namespace ImGuiDot
     /// @brief Temporarily change a colour of the style, restore it with PopStyleColour().
     /// @param index The item.
     /// @param colour The new colour.
-    void PushStyleColour(StyleColour index, ImU32 colour);
-
-    /// @copydoc void PushStyleColour(StyleColour, ImU32)
-    void PushStyleColour(StyleColour index, const ImVec4 &colour);
+    void PushStyleColour(StyleColour index, const ImColor &colour);
 
     /// @brief Restore the colours changed by the last calls to PushStyleColour().
     /// @param count The number of colours to restore.

@@ -140,9 +140,9 @@ namespace ImGuiDot
         ImU32 styleColour,
         const pointf *position = nullptr);
     static Vec2 ConvertPoint(const Parameters &params, const Vec2 &point);
-    static Colour ExtractColour(void *object, const char *name, ImColor styleColour);
+    static ImU32 ExtractColour(void *object, const char *name, ImU32 styleColour);
     static bool IsColourVisible(ImU32 colour);
-    static Colour ExtractColour(const char *colour, ImColor styleColour);
+    static ImU32 ExtractColour(const char *colour, ImU32 styleColour);
 
     // ----- Style -----
 
@@ -152,7 +152,7 @@ namespace ImGuiDot
         struct ColourBackup
         {
             StyleColour index;
-            ImVec4 colour;
+            ImColor colour;
         };
     }
 
@@ -164,12 +164,12 @@ namespace ImGuiDot
 
     Style::Style()
     {
-        colours[StyleColour_Label]             = IMGUIDOT_AUTO_COLOUR;
-        colours[StyleColour_ShapeBorder]       = IMGUIDOT_AUTO_COLOUR;
-        colours[StyleColour_Arc]               = IMGUIDOT_AUTO_COLOUR;
-        colours[StyleColour_ShapeBackground]   = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-        colours[StyleColour_DiagramBackground] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-        colours[StyleColour_DiagramBorder]     = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+        colours[StyleColour_Label]             = AUTO_COLOUR;
+        colours[StyleColour_ShapeBorder]       = AUTO_COLOUR;
+        colours[StyleColour_Arc]               = AUTO_COLOUR;
+        colours[StyleColour_ShapeBackground]   = IM_COL32_BLACK_TRANS;
+        colours[StyleColour_DiagramBackground] = IM_COL32_BLACK_TRANS;
+        colours[StyleColour_DiagramBorder]     = IM_COL32_BLACK_TRANS;
     }
 
     Style &GetStyle()
@@ -181,10 +181,10 @@ namespace ImGuiDot
     {
         IM_ASSERT(index >= 0 && index < StyleColour_Count);
 
-        const ImVec4 &colour = style.colours[index];
-        if (colour.w >= 0.0f) return colour;
+        const ImColor &colour = style.colours[index];
+        if (colour.Value.w >= 0.0f) return colour;
 
-        // IMGUIDOT_AUTO_COLOUR: take the colour from the ImGui style.
+        // AUTO_COLOUR: take the colour from the ImGui style.
         switch (index)
         {
             case StyleColour_Label:
@@ -203,12 +203,7 @@ namespace ImGuiDot
         return ImGui::GetColorU32(GetStyleColourVec4(index));
     }
 
-    void PushStyleColour(const StyleColour index, const ImU32 colour)
-    {
-        PushStyleColour(index, ImGui::ColorConvertU32ToFloat4(colour));
-    }
-
-    void PushStyleColour(const StyleColour index, const ImVec4 &colour)
+    void PushStyleColour(const StyleColour index, const ImColor &colour)
     {
         IM_ASSERT(index >= 0 && index < StyleColour_Count);
 
@@ -348,8 +343,8 @@ namespace ImGuiDot
         const Vec2 diagramMax = params.diagramPos + size;
 
         {
-            const Colour colour = ExtractColour(params.graph, "bgcolor", params.colours[StyleColour_DiagramBackground]);
-            if (IsColourVisible(colour.colour)) draw->AddRectFilled(diagramMin, diagramMax, colour.colour);
+            const ImU32 colour = ExtractColour(params.graph, "bgcolor", params.colours[StyleColour_DiagramBackground]);
+            if (IsColourVisible(colour)) draw->AddRectFilled(diagramMin, diagramMax, colour);
         }
 
         // -----
@@ -380,9 +375,9 @@ namespace ImGuiDot
 
         for (Agnode_t *node = agfstnode(params.graph); node; node = agnxtnode(params.graph, node))
         {
-            const Colour borderColour = ExtractColour(node, "color", params.colours[StyleColour_ShapeBorder]);
-            const Colour fillColour   = ExtractColour(node, "fillcolor", params.colours[StyleColour_ShapeBackground]);
-            const bool drawFill       = IsColourVisible(fillColour.colour);
+            const ImU32 borderColour = ExtractColour(node, "color", params.colours[StyleColour_ShapeBorder]);
+            const ImU32 fillColour   = ExtractColour(node, "fillcolor", params.colours[StyleColour_ShapeBackground]);
+            const bool drawFill      = IsColourVisible(fillColour);
 
             const shape_desc *shape = ND_shape(node);
             if (std::strcmp(shape->name, "ellipse") == 0 || std::strcmp(shape->name, "oval") == 0)
@@ -393,8 +388,8 @@ namespace ImGuiDot
                 const Vec2 radius = halfSize * PIXEL_PER_PPI * params.zoom;
                 const Vec2 centre = ConvertPoint(params, ND_coord(node));
 
-                if (drawFill) draw->AddEllipseFilled(centre, radius, fillColour.colour);
-                draw->AddEllipse(centre, radius, borderColour.colour);
+                if (drawFill) draw->AddEllipseFilled(centre, radius, fillColour);
+                draw->AddEllipse(centre, radius, borderColour);
             }
             else if (std::strcmp(shape->name, "circle") == 0)
             {
@@ -405,8 +400,8 @@ namespace ImGuiDot
                 const float radius    = halfWidth * PIXEL_PER_PPI * params.zoom;
                 const Vec2 centre     = ConvertPoint(params, ND_coord(node));
 
-                if (drawFill) draw->AddCircleFilled(centre, radius, fillColour.colour);
-                draw->AddCircle(centre, radius, borderColour.colour);
+                if (drawFill) draw->AddCircleFilled(centre, radius, fillColour);
+                draw->AddCircle(centre, radius, borderColour);
             }
             // Polygon shapes.
             else if (
@@ -441,8 +436,8 @@ namespace ImGuiDot
                 for (size_t i = 0; i < polygon->sides; ++i)
                     shapeVertices[i] = ConvertPoint(params, centre + vertices[i]);
 
-                if (drawFill) draw->AddConvexPolyFilled(shapeVertices, polygon->sides, fillColour.colour);
-                draw->AddPolyline(shapeVertices, polygon->sides, borderColour.colour, ImDrawFlags_Closed, 1.0f);
+                if (drawFill) draw->AddConvexPolyFilled(shapeVertices, polygon->sides, fillColour);
+                draw->AddPolyline(shapeVertices, polygon->sides, borderColour, ImDrawFlags_Closed, 1.0f);
             }
             // None shape or one of the not supported.
             //
@@ -514,7 +509,7 @@ namespace ImGuiDot
             const splines *spline = ED_spl(arc);
             if (!spline) continue;
 
-            const Colour colour = ExtractColour(arc, "color", params.colours[StyleColour_Arc]);
+            const ImU32 colour = ExtractColour(arc, "color", params.colours[StyleColour_Arc]);
 
             for (size_t i = 0; i < spline->size; ++i)
             {
@@ -531,7 +526,7 @@ namespace ImGuiDot
                     const Vec2 c2 = ConvertPoint(params, bezier.list[j + 2]);
                     const Vec2 p1 = ConvertPoint(params, bezier.list[j + 3]);
 
-                    draw->AddBezierCubic(p0, c1, c2, p1, colour.colour, 1.0f);
+                    draw->AddBezierCubic(p0, c1, c2, p1, colour, 1.0f);
                 }
 
                 // Arrowhead at the arc begin.
@@ -539,7 +534,7 @@ namespace ImGuiDot
                 {
                     const Vec2 apex = ConvertPoint(params, bezier.sp);
                     const Vec2 from = ConvertPoint(params, bezier.list[0]);
-                    DrawArrowhead(params, apex, from, colour.colour, bezier.sflag);
+                    DrawArrowhead(params, apex, from, colour, bezier.sflag);
                 }
 
                 // Arrowhead at the arc end.
@@ -547,7 +542,7 @@ namespace ImGuiDot
                 {
                     const Vec2 apex = ConvertPoint(params, bezier.ep);
                     const Vec2 from = ConvertPoint(params, bezier.list[bezier.size - 1]);
-                    DrawArrowhead(params, apex, from, colour.colour, bezier.eflag);
+                    DrawArrowhead(params, apex, from, colour, bezier.eflag);
                 }
             }
 
@@ -931,7 +926,7 @@ namespace ImGuiDot
 
         // The colour is read from the owner's attribute and not from label->fontcolor: the layout fills the latter with
         // "black" when the source code does not set it, which would hide the default colour.
-        const Colour colour = ExtractColour(owner, "fontcolor", styleColour);
+        const ImU32 colour = ExtractColour(owner, "fontcolor", styleColour);
 
         Vec2 pos;
 
@@ -941,7 +936,7 @@ namespace ImGuiDot
         pos -= textSize / 2.0f;
 
         ImDrawList *const draw = ImGui::GetWindowDrawList();
-        draw->AddText(font, fontSize, pos, colour.colour, label->text);
+        draw->AddText(font, fontSize, pos, colour, label->text);
     }
 
     /// @brief Converts a point from Graphviz's coordinate system to pixels (ImGui's coordinate system).
@@ -972,9 +967,8 @@ namespace ImGuiDot
     /// @param object The Graphviz object.
     /// @param name The name of the object's property.
     /// @param styleColour The colour in ImGui format to return if extraction fails.
-    /// @return The extracted colour with validity set to True on success, or the default colour with validity set to
-    ///         False on failure.
-    static Colour ExtractColour(void *object, const char *name, const ImColor styleColour)
+    /// @return The extracted colour on success, or the style colour on failure.
+    static ImU32 ExtractColour(void *object, const char *name, const ImU32 styleColour)
     {
         const char *colour = agget(object, const_cast<char *>(name));
         return ExtractColour(colour, styleColour);
@@ -984,17 +978,16 @@ namespace ImGuiDot
     ///        format.
     /// @param colour The colour in Graphviz format.
     /// @param styleColour The colour in ImGui format to return if extraction fails.
-    /// @return The extracted colour with validity set to True on success, or the default colour with validity set to
-    ///         False on failure.
-    static Colour ExtractColour(const char *colour, const ImColor styleColour)
+    /// @return The extracted colour on success, or the style colour on failure.
+    static ImU32 ExtractColour(const char *colour, const ImU32 styleColour)
     {
-        if (!colour || colour[0] == '\0') return { styleColour, false };
+        if (!colour || colour[0] == '\0') return styleColour;
 
         gvcolor_t coloreGV;
         if (colorxlate(colour, &coloreGV, RGBA_BYTE) == COLOR_OK)
-            return { IM_COL32(coloreGV.u.rgba[0], coloreGV.u.rgba[1], coloreGV.u.rgba[2], coloreGV.u.rgba[3]), true };
+            return IM_COL32(coloreGV.u.rgba[0], coloreGV.u.rgba[1], coloreGV.u.rgba[2], coloreGV.u.rgba[3]);
 
-        return { styleColour, false };
+        return styleColour;
     }
 
     /// @brief Tells if a colour is not fully transparent, so if drawing with it is useful.
