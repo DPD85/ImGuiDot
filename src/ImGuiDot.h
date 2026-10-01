@@ -35,7 +35,7 @@ namespace ImGuiDot
         StyleColour_ShapeBackground,   ///< Background of the shapes. Default: transparent.
         StyleColour_DiagramBackground, ///< Background of the diagram. Default: transparent.
         StyleColour_DiagramBorder,     ///< Border around the diagram. Default: transparent.
-        StyleColour_COUNT
+        StyleColour_Count
     };
     using StyleColour = int;
 
@@ -45,7 +45,7 @@ namespace ImGuiDot
     struct Style
     {
         /// @brief The colours of the items, use IMGUIDOT_AUTO_COLOUR to follow the ImGui style.
-        ImVec4 colours[StyleColour_COUNT];
+        ImVec4 colours[StyleColour_Count];
 
         Style();
     };
@@ -54,22 +54,22 @@ namespace ImGuiDot
     Style &GetStyle();
 
     /// @brief Get a colour of the style, with IMGUIDOT_AUTO_COLOUR resolved from the ImGui style in use.
-    /// @param idx The item.
+    /// @param index The item.
     /// @return The colour, without the global alpha of the ImGui style applied.
-    ImVec4 GetStyleColourVec4(StyleColour idx);
+    ImVec4 GetStyleColourVec4(StyleColour index);
 
     /// @brief Get a colour of the style, with IMGUIDOT_AUTO_COLOUR resolved from the ImGui style in use.
-    /// @param idx The item.
+    /// @param index The item.
     /// @return The colour, with the global alpha of the ImGui style applied (as ImGui::GetColorU32() does).
-    ImU32 GetStyleColourU32(StyleColour idx);
+    ImU32 GetStyleColourU32(StyleColour index);
 
     /// @brief Temporarily change a colour of the style, restore it with PopStyleColour().
-    /// @param idx The item.
+    /// @param index The item.
     /// @param colour The new colour.
-    void PushStyleColour(StyleColour idx, ImU32 colour);
+    void PushStyleColour(StyleColour index, ImU32 colour);
 
     /// @copydoc void PushStyleColour(StyleColour, ImU32)
-    void PushStyleColour(StyleColour idx, const ImVec4 &colour);
+    void PushStyleColour(StyleColour index, const ImVec4 &colour);
 
     /// @brief Restore the colours changed by the last calls to PushStyleColour().
     /// @param count The number of colours to restore.

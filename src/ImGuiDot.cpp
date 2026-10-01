@@ -114,7 +114,7 @@ namespace ImGuiDot
             Agraph_t *graph;
             float zoom;
             Vec2 diagramPos;                   // [pixel]
-            ImU32 colours[StyleColour_COUNT]; // The style colours resolved when the drawing begins.
+            ImU32 colours[StyleColour_Count]; // The style colours resolved when the drawing begins.
         };
     }
 
@@ -137,12 +137,12 @@ namespace ImGuiDot
         const Parameters &params,
         const textlabel_t *label,
         void *owner,
-        ImU32 defaultColour,
+        ImU32 styleColour,
         const pointf *position = nullptr);
     static Vec2 ConvertPoint(const Parameters &params, const Vec2 &point);
-    static Colour ExtractColour(void *object, const char *name, ImColor defaultColour);
-    static bool IsVisible(ImU32 colour);
-    static Colour ExtractColour(const char *colour, ImColor defaultColour);
+    static Colour ExtractColour(void *object, const char *name, ImColor styleColour);
+    static bool IsColourVisible(ImU32 colour);
+    static Colour ExtractColour(const char *colour, ImColor styleColour);
 
     // ----- Style -----
 
@@ -151,7 +151,7 @@ namespace ImGuiDot
         /// @brief A colour saved by PushStyleColour() to be restored by PopStyleColour().
         struct ColourBackup
         {
-            StyleColour idx;
+            StyleColour index;
             ImVec4 colour;
         };
     }
@@ -177,15 +177,15 @@ namespace ImGuiDot
         return style;
     }
 
-    ImVec4 GetStyleColourVec4(const StyleColour idx)
+    ImVec4 GetStyleColourVec4(const StyleColour index)
     {
-        IM_ASSERT(idx >= 0 && idx < StyleColour_COUNT);
+        IM_ASSERT(index >= 0 && index < StyleColour_Count);
 
-        const ImVec4 &colour = style.colours[idx];
+        const ImVec4 &colour = style.colours[index];
         if (colour.w >= 0.0f) return colour;
 
         // IMGUIDOT_AUTO_COLOUR: take the colour from the ImGui style.
-        switch (idx)
+        switch (index)
         {
             case StyleColour_Label:
                 return ImGui::GetStyleColorVec4(ImGuiCol_Text);
@@ -198,22 +198,22 @@ namespace ImGuiDot
         }
     }
 
-    ImU32 GetStyleColourU32(const StyleColour idx)
+    ImU32 GetStyleColourU32(const StyleColour index)
     {
-        return ImGui::GetColorU32(GetStyleColourVec4(idx));
+        return ImGui::GetColorU32(GetStyleColourVec4(index));
     }
 
-    void PushStyleColour(const StyleColour idx, const ImU32 colour)
+    void PushStyleColour(const StyleColour index, const ImU32 colour)
     {
-        PushStyleColour(idx, ImGui::ColorConvertU32ToFloat4(colour));
+        PushStyleColour(index, ImGui::ColorConvertU32ToFloat4(colour));
     }
 
-    void PushStyleColour(const StyleColour idx, const ImVec4 &colour)
+    void PushStyleColour(const StyleColour index, const ImVec4 &colour)
     {
-        IM_ASSERT(idx >= 0 && idx < StyleColour_COUNT);
+        IM_ASSERT(index >= 0 && index < StyleColour_Count);
 
-        colourStack.push_back({ /*.idx =*/idx, /*.colour =*/style.colours[idx] });
-        style.colours[idx] = colour;
+        colourStack.push_back({ /*.index =*/index, /*.colour =*/style.colours[index] });
+        style.colours[index] = colour;
     }
 
     void PopStyleColour(int count)
@@ -223,8 +223,8 @@ namespace ImGuiDot
 
         for (; count > 0; --count)
         {
-            const ColourBackup &backup = colourStack.back();
-            style.colours[backup.idx]  = backup.colour;
+            const ColourBackup &backup  = colourStack.back();
+            style.colours[backup.index] = backup.colour;
             colourStack.pop_back();
         }
     }
@@ -317,7 +317,7 @@ namespace ImGuiDot
         if (diagram.graph == nullptr) return;
 
         Parameters params{ /*.graph =*/diagram.graph, /*.zoom =*/zoom, /* .diagramPos =*/{}, /*.colours =*/{} };
-        for (int i = 0; i < StyleColour_COUNT; ++i) params.colours[i] = GetStyleColourU32(i);
+        for (int i = 0; i < StyleColour_Count; ++i) params.colours[i] = GetStyleColourU32(i);
 
         // -----
 
@@ -349,7 +349,7 @@ namespace ImGuiDot
 
         {
             const Colour colour = ExtractColour(params.graph, "bgcolor", params.colours[StyleColour_DiagramBackground]);
-            if (IsVisible(colour.colour)) draw->AddRectFilled(diagramMin, diagramMax, colour.colour);
+            if (IsColourVisible(colour.colour)) draw->AddRectFilled(diagramMin, diagramMax, colour.colour);
         }
 
         // -----
@@ -358,7 +358,7 @@ namespace ImGuiDot
 
         // ----- Draw diagram border
 
-        if (IsVisible(params.colours[StyleColour_DiagramBorder]))
+        if (IsColourVisible(params.colours[StyleColour_DiagramBorder]))
             draw->AddRect(diagramMin, diagramMax, params.colours[StyleColour_DiagramBorder]);
 
         // ----- Reserve the diagram space in the layout
@@ -382,7 +382,7 @@ namespace ImGuiDot
         {
             const Colour borderColour = ExtractColour(node, "color", params.colours[StyleColour_ShapeBorder]);
             const Colour fillColour   = ExtractColour(node, "fillcolor", params.colours[StyleColour_ShapeBackground]);
-            const bool drawFill       = IsVisible(fillColour.colour);
+            const bool drawFill       = IsColourVisible(fillColour.colour);
 
             const shape_desc *shape = ND_shape(node);
             if (std::strcmp(shape->name, "ellipse") == 0 || std::strcmp(shape->name, "oval") == 0)
@@ -912,14 +912,14 @@ namespace ImGuiDot
     /// @param params The internal state and parameters to use.
     /// @param label The Graphviz label to draw.
     /// @param owner The Graphviz object (node, arc) the label belongs to, its fontcolor attribute gives the colour.
-    /// @param defaultColour The colour to use if the owner does not set one.
+    /// @param styleColour The colour to use if the owner does not set one.
     /// @param position Optional coordinate of the label position, they are used when the label does not provide a
     ///                 position by itself (like the nodes labels for example). [pixel]
     static void DrawLabel(
         const Parameters &params,
         const textlabel_t *const label,
         void *const owner,
-        const ImU32 defaultColour,
+        const ImU32 styleColour,
         const pointf *const position)
     {
         if (!label || !label->text || label->text[0] == '\0') return;
@@ -931,7 +931,7 @@ namespace ImGuiDot
 
         // The colour is read from the owner's attribute and not from label->fontcolor: the layout fills the latter with
         // "black" when the source code does not set it, which would hide the default colour.
-        const Colour colour = ExtractColour(owner, "fontcolor", defaultColour);
+        const Colour colour = ExtractColour(owner, "fontcolor", styleColour);
 
         Vec2 pos;
 
@@ -971,36 +971,36 @@ namespace ImGuiDot
     ///        ImGui format.
     /// @param object The Graphviz object.
     /// @param name The name of the object's property.
-    /// @param defaultColour The colour in ImGui format to return if extraction fails.
+    /// @param styleColour The colour in ImGui format to return if extraction fails.
     /// @return The extracted colour with validity set to True on success, or the default colour with validity set to
     ///         False on failure.
-    static Colour ExtractColour(void *object, const char *name, const ImColor defaultColour)
+    static Colour ExtractColour(void *object, const char *name, const ImColor styleColour)
     {
         const char *colour = agget(object, const_cast<char *>(name));
-        return ExtractColour(colour, defaultColour);
+        return ExtractColour(colour, styleColour);
     }
 
     /// @brief Given a string containing a colour in Graphviz format, extracts the colour and converts it to ImGui
     ///        format.
     /// @param colour The colour in Graphviz format.
-    /// @param defaultColour The colour in ImGui format to return if extraction fails.
+    /// @param styleColour The colour in ImGui format to return if extraction fails.
     /// @return The extracted colour with validity set to True on success, or the default colour with validity set to
     ///         False on failure.
-    static Colour ExtractColour(const char *colour, const ImColor defaultColour)
+    static Colour ExtractColour(const char *colour, const ImColor styleColour)
     {
-        if (!colour || colour[0] == '\0') return { defaultColour, false };
+        if (!colour || colour[0] == '\0') return { styleColour, false };
 
         gvcolor_t coloreGV;
         if (colorxlate(colour, &coloreGV, RGBA_BYTE) == COLOR_OK)
             return { IM_COL32(coloreGV.u.rgba[0], coloreGV.u.rgba[1], coloreGV.u.rgba[2], coloreGV.u.rgba[3]), true };
 
-        return { defaultColour, false };
+        return { styleColour, false };
     }
 
     /// @brief Tells if a colour is not fully transparent, so if drawing with it is useful.
     /// @param colour The colour to check.
     /// @return True if the colour alpha is not zero.
-    static bool IsVisible(const ImU32 colour)
+    static bool IsColourVisible(const ImU32 colour)
     {
         return (colour & IM_COL32_A_MASK) != 0;
     }
