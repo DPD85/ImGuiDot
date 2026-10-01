@@ -86,11 +86,11 @@ ImGui::End();
     - font size;
     - note: the font family is always the default one set-up into ImGui;
 - stiles:
-    - fill and background colours of the shapes and of the diagram itself (default is transparent);
-    - border colour of the shapes (default is the ImGui border colour);
-    - arcs colour (default is the ImGui border colour);
-    - labels colour (default is the ImGui text colour);
-    - the defaults come from `ImGuiDot::Style`, see [Style](#style).
+    - fill and background colours of the shapes and of the diagram itself;
+    - border colour of the shapes;
+    - arcs colour;
+    - labels colour;
+    - look at [Style](#style) for the defaults.
 
 ### Interfaces
 
@@ -120,20 +120,20 @@ ImGuiDot::CleanUp(diagramState);
 
 ### Style
 
-The colours that the DOT source code leaves unspecified come from `ImGuiDot::Style`, modelled on `ImGuiStyle`.
-By default they follow the ImGui style in use, so the diagrams change with the ImGui theme:
+ImGuiDot draws each item with the colour set in the DOT source code (`color`, `fillcolor`, `fontcolor`, `bgcolor`).
+The items without a colour in the source code take it from `ImGuiDot::Style`, a structure modelled on `ImGuiStyle`.
+By default the style follows the ImGui style in use, so the diagrams change together with the ImGui theme:
 
-| Item | `ImGuiDot::StyleColour_` | Default |
-|:-----|:-------------------------|:--------|
-| Labels | `Label` | `ImGuiCol_Text` |
-| Border of the shapes | `ShapeBorder` | `ImGuiCol_Border` |
-| Arcs and arrowheads | `Arc` | `ImGuiCol_Border` |
-| Background of the shapes | `ShapeBackground` | transparent |
-| Background of the diagram | `DiagramBackground` | transparent |
-| Border around the diagram | `DiagramBorder` | transparent |
+| Item                      | `ImGuiDot::StyleColour_` | Default           |
+|:--------------------------|:-------------------------|:------------------|
+| Labels                    | `Label`                  | `ImGuiCol_Text`   |
+| Border of the shapes      | `ShapeBorder`            | `ImGuiCol_Border` |
+| Arcs and arrowheads       | `Arc`                    | `ImGuiCol_Border` |
+| Background of the shapes  | `ShapeBackground`        | transparent       |
+| Background of the diagram | `DiagramBackground`      | transparent       |
+| Border around the diagram | `DiagramBorder`          | transparent       |
 
-A colour set in the DOT source code (`color`, `fillcolor`, `fontcolor`, `bgcolor`) always wins over the style.
-The value `IMGUIDOT_AUTO_COLOUR` makes a colour follow the ImGui style again.
+The value `ImGuiDot::AUTO_COLOUR` makes a colour follow the ImGui style again.
 
 ```C++
 // Change a colour for all the diagrams drawn after.
