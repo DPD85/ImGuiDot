@@ -83,6 +83,8 @@ ImGui::End();
     - icurve;
 - labels:
     - text with support to UTF-8;
+    - multi-line text, with each line centred, left or right justified by the `\n`, `\l` and `\r` escapes as in
+      Graphviz;
     - font size;
     - note: the font family is always the default one set-up into ImGui;
 - stiles:

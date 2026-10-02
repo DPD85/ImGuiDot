@@ -926,22 +926,22 @@ namespace ImGuiDot
 
         ImDrawList *const draw = ImGui::GetWindowDrawList();
 
-        // The layout splits a plain text label into lines at the \n, \l and \r escapes (centred, left and right
-        // justified), label->text keeps the escapes: draw the lines one by one. An HTML label has no lines here, it is
-        // drawn as a single line.
-        const textspan_t *const lines = label->html ? nullptr : label->u.txt.span;
-        const size_t lineCount        = label->html ? 0 : label->u.txt.nspans;
-
-        if (lines == nullptr || lineCount == 0)
+        // An HTML label has no lines here: it is drawn as a single line.
+        if (label->html)
         {
             const Vec2 textSize = font->CalcTextSizeA(fontSize, std::numeric_limits<float>::max(), -1.0f, label->text);
             draw->AddText(font, fontSize, centre - textSize / 2.0f, colour, label->text);
             return;
         }
 
+        // The layout splits a plain text label into lines at the \n, \l and \r escapes (centred, left and right
+        // justified), label->text keeps the escapes: draw the lines one by one.
+        const textspan_t *const lines = label->u.txt.span;
+        const size_t numLines         = label->u.txt.nspans;
+
         // Size of the whole block of lines: the widest line and the sum of the line heights. [pixel]
         Vec2 blockSize;
-        for (size_t i = 0; i < lineCount; ++i)
+        for (size_t i = 0; i < numLines; ++i)
         {
             const char *const text = lines[i].str ? lines[i].str : "";
             const Vec2 lineSize    = font->CalcTextSizeA(fontSize, std::numeric_limits<float>::max(), -1.0f, text);
@@ -949,18 +949,31 @@ namespace ImGuiDot
             blockSize.y += lineSize.y;
         }
 
-        Vec2 lineTopLeft = centre - blockSize / 2.0f;
-        for (size_t i = 0; i < lineCount; ++i)
+        // Top left corner of the block of lines. [pixel]
+        const Vec2 blockTopLeft = centre - blockSize / 2.0f;
+
+        // Top left corner of the line to draw, the lines are stacked from the top of the block. [pixel]
+        Vec2 textPos = blockTopLeft;
+        for (size_t i = 0; i < numLines; ++i)
         {
             const char *const text = lines[i].str ? lines[i].str : "";
             const Vec2 lineSize    = font->CalcTextSizeA(fontSize, std::numeric_limits<float>::max(), -1.0f, text);
 
-            float x = centre.x - lineSize.x / 2.0f; // 'n': centred.
-            if (lines[i].just == 'l') x = lineTopLeft.x;
-            else if (lines[i].just == 'r') x = lineTopLeft.x + blockSize.x - lineSize.x;
+            switch (lines[i].just)
+            {
+                case 'l': // Left justified.
+                    textPos.x = blockTopLeft.x;
+                    break;
+                case 'r': // Right justified.
+                    textPos.x = blockTopLeft.x + blockSize.x - lineSize.x;
+                    break;
+                default: // Centred ('n').
+                    textPos.x = centre.x - lineSize.x / 2.0f;
+                    break;
+            }
 
-            draw->AddText(font, fontSize, Vec2(x, lineTopLeft.y), colour, text);
-            lineTopLeft.y += lineSize.y;
+            draw->AddText(font, fontSize, textPos, colour, text);
+            textPos.y += lineSize.y;
         }
     }
 
