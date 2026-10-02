@@ -86,10 +86,11 @@ ImGui::End();
     - font size;
     - note: the font family is always the default one set-up into ImGui;
 - stiles:
-    - fill and background colours of the shapes, the arcs and the diagram itself (default is transparent);
-    - border colour of the shapes (default is black);
-    - arcs colour (default is black);
-    - labels colour (default is black).
+    - fill and background colours of the shapes and of the diagram itself;
+    - border colour of the shapes;
+    - arcs colour;
+    - labels colour;
+    - look at [Style](#style) chapter for the defaults.
 
 ### Interfaces
 
@@ -116,6 +117,37 @@ ImGuiDot::Draw(diagramState);
 // Before to termivate the program or when the diagram need to be detroyed.
 ImGuiDot::CleanUp(diagramState);
 ```
+
+### Style
+
+ImGuiDot draws each item with the colour set in the DOT source code (`color`, `fillcolor`, `fontcolor`, `bgcolor`).
+The items without a colour in the source code take it from `ImGuiDot::Style`, a structure modelled on `ImGuiStyle`.
+By default the style follows the ImGui style in use, so the diagrams change together with the ImGui theme:
+
+| Item                      | `ImGuiDot::StyleColour` | Default            |
+|:--------------------------|:------------------------|:-------------------|
+| Labels                    | `Label`                 | `ImGuiCol_Text`    |
+| Border of the shapes      | `ShapeBorder`           | `ImGuiCol_Border`  |
+| Arcs and arrowheads       | `Arc`                   | `ImGuiCol_Border`  |
+| Background of the shapes  | `ShapeBackground`       | `ImGuiCol_FrameBg` |
+| Background of the diagram | `DiagramBackground`     | transparent        |
+| Border around the diagram | `DiagramBorder`         | `ImGuiCol_Border`  |
+
+The value `ImGuiDot::AUTO_COLOUR` makes a colour follow the ImGui style again.
+
+```C++
+// Change a colour for all the diagrams drawn after.
+ImGuiDot::GetStyle().colours[ImGuiDot::StyleColour_DiagramBorder] = ImGui::GetStyleColorVec4(ImGuiCol_Separator);
+
+// Change a colour only for one diagram.
+ImGuiDot::PushStyleColour(ImGuiDot::StyleColour_ShapeBackground, IM_COL32(40, 60, 90, 255));
+ImGuiDot::Diagram(dotSourceCode);
+ImGuiDot::PopStyleColour();
+```
+
+An example of a diagram draw using the default colours with ImGui light, dark and classic themes in order.
+
+![](docs/StyleLight.png) ![](docs/StyleDark.png) ![](docs/StyleClassic.png)
 
 ### Multi-thread
 
