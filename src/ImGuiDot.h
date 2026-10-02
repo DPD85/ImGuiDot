@@ -59,7 +59,7 @@ namespace ImGuiDot
     /// @brief Get a colour of the style, with AUTO_COLOUR resolved from the ImGui style in use.
     /// @param index The item.
     /// @return The colour, without the global alpha of the ImGui style applied.
-    ImVec4 GetStyleColourVec4(StyleColour index);
+    ImColor GetStyleColour(StyleColour index);
 
     /// @brief Get a colour of the style, with AUTO_COLOUR resolved from the ImGui style in use.
     /// @param index The item.
