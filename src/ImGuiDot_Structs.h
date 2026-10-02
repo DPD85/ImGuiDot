@@ -6,13 +6,6 @@
 
 namespace ImGuiDot
 {
-    // A ImColor extracted or converted from the Graphviz format.
-    struct Colour
-    {
-        ImColor colour;
-        bool isValid;
-    };
-
     // A 2D vector, it expand the ImVec2 adding some mathematical operators.
     struct Vec2: ImVec2
     {
