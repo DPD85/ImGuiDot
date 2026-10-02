@@ -138,7 +138,6 @@ namespace ImGuiDot
     static Vec2 ConvertPoint(const Parameters &params, const Vec2 &point);
     static ImU32 ExtractColour(void *object, const char *name, ImU32 styleColour);
     static ImU32 ExtractColour(const char *colour, ImU32 styleColour);
-    static inline bool IsColourVisible(ImU32 colour);
 
     // ----- Style -----
 
@@ -347,11 +346,9 @@ namespace ImGuiDot
             const Vec2 diagramMin = params.diagramPos;
             const Vec2 diagramMax = params.diagramPos + size;
 
-            const ImU32 colour = ExtractColour(params.graph, "bgcolor", params.colours[StyleColour_DiagramBackground]);
-            if (IsColourVisible(colour)) draw->AddRectFilled(diagramMin, diagramMax, colour);
-
-            if (IsColourVisible(params.colours[StyleColour_DiagramBorder]))
-                draw->AddRect(diagramMin, diagramMax, params.colours[StyleColour_DiagramBorder]);
+            const ImU32 bgColour = ExtractColour(params.graph, "bgcolor", params.colours[StyleColour_DiagramBackground]);
+            draw->AddRectFilled(diagramMin, diagramMax, bgColour);
+            draw->AddRect(diagramMin, diagramMax, params.colours[StyleColour_DiagramBorder]);
         }
 
         // -----
@@ -379,7 +376,6 @@ namespace ImGuiDot
         {
             const ImU32 borderColour = ExtractColour(node, "color", params.colours[StyleColour_ShapeBorder]);
             const ImU32 fillColour   = ExtractColour(node, "fillcolor", params.colours[StyleColour_ShapeBackground]);
-            const bool drawFill      = IsColourVisible(fillColour);
 
             const shape_desc *shape = ND_shape(node);
             if (std::strcmp(shape->name, "ellipse") == 0 || std::strcmp(shape->name, "oval") == 0)
@@ -390,7 +386,7 @@ namespace ImGuiDot
                 const Vec2 radius = halfSize * PIXEL_PER_PPI * params.zoom;
                 const Vec2 centre = ConvertPoint(params, ND_coord(node));
 
-                if (drawFill) draw->AddEllipseFilled(centre, radius, fillColour);
+                draw->AddEllipseFilled(centre, radius, fillColour);
                 draw->AddEllipse(centre, radius, borderColour);
             }
             else if (std::strcmp(shape->name, "circle") == 0)
@@ -402,7 +398,7 @@ namespace ImGuiDot
                 const float radius    = halfWidth * PIXEL_PER_PPI * params.zoom;
                 const Vec2 centre     = ConvertPoint(params, ND_coord(node));
 
-                if (drawFill) draw->AddCircleFilled(centre, radius, fillColour);
+                draw->AddCircleFilled(centre, radius, fillColour);
                 draw->AddCircle(centre, radius, borderColour);
             }
             // Polygon shapes.
@@ -438,7 +434,7 @@ namespace ImGuiDot
                 for (size_t i = 0; i < polygon->sides; ++i)
                     shapeVertices[i] = ConvertPoint(params, centre + vertices[i]);
 
-                if (drawFill) draw->AddConvexPolyFilled(shapeVertices, polygon->sides, fillColour);
+                draw->AddConvexPolyFilled(shapeVertices, polygon->sides, fillColour);
                 draw->AddPolyline(shapeVertices, polygon->sides, borderColour, ImDrawFlags_Closed, 1.0f);
             }
             // None shape or one of the not supported.
@@ -557,7 +553,7 @@ namespace ImGuiDot
         }
     }
 
-    /// @brief Draw a arrowhead.
+    /// @brief Draw an arrowhead.
     /// @param params The internal state and parameters to use.
     /// @param apex The coordinate of the apex of the arrowhead. [pixel]
     /// @param base The coordinate of the arc point where the arrowhead is placed, correspond to the base centre point
@@ -905,10 +901,10 @@ namespace ImGuiDot
         draw->PathStroke(colour);
     }
 
-    /// @brief Draw a Graphiviz label of a node or an arc or other.
+    /// @brief Draw a Graphiviz label of a node, an arc or other.
     /// @param params The internal state and parameters to use.
     /// @param label The Graphviz label to draw.
-    /// @param owner The Graphviz object (node, arc) the label belongs to, its fontcolor attribute gives the
+    /// @param owner The Graphviz object (node, arc) the label belongs to, its 'fontcolor' attribute gives the
     ///              colour (otherwise the label colour of the style).
     /// @param position Optional coordinate of the label position, they are used when the label does not provide a
     ///                 position by itself (like the nodes labels for example). [pixel]
@@ -922,8 +918,8 @@ namespace ImGuiDot
         const float fontSize = static_cast<float>(label->fontsize) * params.zoom;
         const Vec2 textSize  = font->CalcTextSizeA(fontSize, std::numeric_limits<float>::max(), -1.0f, label->text);
 
-        // The colour is read from the owner's attribute and not from label->fontcolor: the layout fills the latter with
-        // "black" when the source code does not set it, which would hide the default colour.
+        // The colour is read from the owner's attribute and not from label->fontcolor: the Graphviz layout fills the
+        // latter with "black" when the source code does not set it, which would hide the default colour.
         const ImU32 colour = ExtractColour(owner, "fontcolor", params.colours[StyleColour_Label]);
 
         Vec2 pos;
@@ -965,7 +961,7 @@ namespace ImGuiDot
     /// @param object The Graphviz object.
     /// @param name The name of the object's property.
     /// @param styleColour The colour in ImGui format to return if extraction fails.
-    /// @return The extracted colour on success, or the style colour on failure.
+    /// @return The extracted colour on success or the style colour on failure.
     static ImU32 ExtractColour(void *object, const char *name, const ImU32 styleColour)
     {
         const char *colour = agget(object, const_cast<char *>(name));
@@ -976,7 +972,7 @@ namespace ImGuiDot
     ///        format.
     /// @param colour The colour in Graphviz format.
     /// @param styleColour The colour in ImGui format to return if extraction fails.
-    /// @return The extracted colour on success, or the style colour on failure.
+    /// @return The extracted colour on success or the style colour on failure.
     static ImU32 ExtractColour(const char *colour, const ImU32 styleColour)
     {
         if (!colour || colour[0] == '\0') return styleColour;
@@ -986,13 +982,5 @@ namespace ImGuiDot
             return IM_COL32(coloreGV.u.rgba[0], coloreGV.u.rgba[1], coloreGV.u.rgba[2], coloreGV.u.rgba[3]);
 
         return styleColour;
-    }
-
-    /// @brief Tells if a colour is not fully transparent, so if drawing with it is useful.
-    /// @param colour The colour to check.
-    /// @return True if the colour alpha is not zero.
-    static inline bool IsColourVisible(const ImU32 colour)
-    {
-        return (colour & IM_COL32_A_MASK) != 0;
     }
 }
