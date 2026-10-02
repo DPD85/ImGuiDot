@@ -27,7 +27,7 @@ namespace ImGuiDot
     /// @brief Special colour value: the item takes its colour from the ImGui style in use, the colour of each item is
     ///        listed in StyleColour_ (Auto). The value is resolved every time the colour is read, so the item follows
     ///        the ImGui style when it changes. It is marked by a negative alpha, which no real colour has.
-    constexpr ImColor AUTO_COLOUR(0.0f, 0.0f, 0.0f, -1.0f);
+    const constexpr ImColor AUTO_COLOUR(0.0f, 0.0f, 0.0f, -1.0f);
 
     /// @brief The items of a diagram with a colour in the style.
     enum StyleColour_ : int
@@ -40,6 +40,7 @@ namespace ImGuiDot
         StyleColour_DiagramBorder,     ///< Border around the diagram. Default: transparent.
         StyleColour_Count
     };
+
     using StyleColour = std::underlying_type_t<StyleColour_>;
 
     /// @brief The style of the diagrams, modelled on ImGuiStyle.

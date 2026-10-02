@@ -113,7 +113,7 @@ namespace ImGuiDot
         {
             Agraph_t *graph;
             float zoom;
-            Vec2 diagramPos;                   // [pixel]
+            Vec2 diagramPos;                  // [pixel]
             ImU32 colours[StyleColour_Count]; // The style colours resolved when the drawing begins.
         };
     }
@@ -134,10 +134,7 @@ namespace ImGuiDot
         const Parameters &params, const Vec2 &apex, const Vec2 &base, ImU32 colour, uint32_t flags);
     static void DrawArrowheadCurve(const Vec2 &apex, const Vec2 &base, ImU32 colour, uint32_t flags);
     static void DrawLabel(
-        const Parameters &params,
-        const textlabel_t *label,
-        void *owner,
-        const pointf *position = nullptr);
+        const Parameters &params, const textlabel_t *label, void *owner, const pointf *position = nullptr);
     static Vec2 ConvertPoint(const Parameters &params, const Vec2 &point);
     static ImU32 ExtractColour(void *object, const char *name, ImU32 styleColour);
     static ImU32 ExtractColour(const char *colour, ImU32 styleColour);
@@ -166,9 +163,9 @@ namespace ImGuiDot
         colours[StyleColour_Label]             = AUTO_COLOUR;
         colours[StyleColour_ShapeBorder]       = AUTO_COLOUR;
         colours[StyleColour_Arc]               = AUTO_COLOUR;
-        colours[StyleColour_ShapeBackground]   = IM_COL32_BLACK_TRANS;
-        colours[StyleColour_DiagramBackground] = IM_COL32_BLACK_TRANS;
-        colours[StyleColour_DiagramBorder]     = IM_COL32_BLACK_TRANS;
+        colours[StyleColour_ShapeBackground]   = AUTO_COLOUR;
+        colours[StyleColour_DiagramBackground] = AUTO_COLOUR;
+        colours[StyleColour_DiagramBorder]     = AUTO_COLOUR;
     }
 
     Style &GetStyle()
@@ -349,16 +346,16 @@ namespace ImGuiDot
 
         // ----- Draw diagram background and border
 
-        const Vec2 diagramMin = params.diagramPos;
-        const Vec2 diagramMax = params.diagramPos + size;
-
         {
+            const Vec2 diagramMin = params.diagramPos;
+            const Vec2 diagramMax = params.diagramPos + size;
+
             const ImU32 colour = ExtractColour(params.graph, "bgcolor", params.colours[StyleColour_DiagramBackground]);
             if (IsColourVisible(colour)) draw->AddRectFilled(diagramMin, diagramMax, colour);
-        }
 
-        if (IsColourVisible(params.colours[StyleColour_DiagramBorder]))
-            draw->AddRect(diagramMin, diagramMax, params.colours[StyleColour_DiagramBorder]);
+            if (IsColourVisible(params.colours[StyleColour_DiagramBorder]))
+                draw->AddRect(diagramMin, diagramMax, params.colours[StyleColour_DiagramBorder]);
+        }
 
         // -----
 
@@ -367,7 +364,7 @@ namespace ImGuiDot
         // ----- Reserve the diagram space in the layout
 
         // The draw list does not move the cursor: without an item the next widget would be placed over the diagram and
-        // the window would not count the diagram in its content size (so no scrollbars).
+        // the window would not count the diagram in its content size (so, for example, no scroll bars).
         ImGui::Dummy(params.diagramPos + size - cursorPos);
     }
 
@@ -919,10 +916,7 @@ namespace ImGuiDot
     /// @param position Optional coordinate of the label position, they are used when the label does not provide a
     ///                 position by itself (like the nodes labels for example). [pixel]
     static void DrawLabel(
-        const Parameters &params,
-        const textlabel_t *const label,
-        void *const owner,
-        const pointf *const position)
+        const Parameters &params, const textlabel_t *const label, void *const owner, const pointf *const position)
     {
         if (!label || !label->text || label->text[0] == '\0') return;
         if (!position && !label->set) return;
