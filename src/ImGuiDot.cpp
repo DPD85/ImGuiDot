@@ -321,8 +321,8 @@ namespace ImGuiDot
         if (diagram.graph == nullptr) return;
 
         Parameters params{ /*.graph =*/diagram.graph, /*.zoom =*/zoom, /* .diagramPos =*/{}, /*.colours =*/{} };
-        for (size_t i = 0; i < std::size(params.colours); ++i)
-            params.colours[i] = GetStyleColourU32(static_cast<StyleColour>(i));
+        for (int i = 0; i < StyleColour_Count; ++i)
+            params.colours[i] = GetStyleColourU32(i);
 
         // -----
 
