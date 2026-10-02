@@ -90,7 +90,7 @@ ImGui::End();
     - border colour of the shapes;
     - arcs colour;
     - labels colour;
-    - look at [Style](#style) for the defaults.
+    - look at [Style](#style) chapter for the defaults.
 
 ### Interfaces
 
@@ -124,14 +124,14 @@ ImGuiDot draws each item with the colour set in the DOT source code (`color`, `f
 The items without a colour in the source code take it from `ImGuiDot::Style`, a structure modelled on `ImGuiStyle`.
 By default the style follows the ImGui style in use, so the diagrams change together with the ImGui theme:
 
-| Item                      | `ImGuiDot::StyleColour_` | Default           |
-|:--------------------------|:-------------------------|:------------------|
-| Labels                    | `Label`                  | `ImGuiCol_Text`   |
-| Border of the shapes      | `ShapeBorder`            | `ImGuiCol_Border` |
-| Arcs and arrowheads       | `Arc`                    | `ImGuiCol_Border` |
-| Background of the shapes  | `ShapeBackground`        | transparent       |
-| Background of the diagram | `DiagramBackground`      | transparent       |
-| Border around the diagram | `DiagramBorder`          | transparent       |
+| Item                      | `ImGuiDot::StyleColour` | Default            |
+|:--------------------------|:------------------------|:-------------------|
+| Labels                    | `Label`                 | `ImGuiCol_Text`    |
+| Border of the shapes      | `ShapeBorder`           | `ImGuiCol_Border`  |
+| Arcs and arrowheads       | `Arc`                   | `ImGuiCol_Border`  |
+| Background of the shapes  | `ShapeBackground`       | `ImGuiCol_FrameBg` |
+| Background of the diagram | `DiagramBackground`     | transparent        |
+| Border around the diagram | `DiagramBorder`         | `ImGuiCol_Border`  |
 
 The value `ImGuiDot::AUTO_COLOUR` makes a colour follow the ImGui style again.
 
@@ -144,6 +144,10 @@ ImGuiDot::PushStyleColour(ImGuiDot::StyleColour_ShapeBackground, IM_COL32(40, 60
 ImGuiDot::Diagram(dotSourceCode);
 ImGuiDot::PopStyleColour();
 ```
+
+An example of a diagram draw using the default colours with ImGui light, dark and classic themes in order.
+
+![](docs/StyleLight.png) ![](docs/StyleDark.png) ![](docs/StyleClassic.png)
 
 ### Multi-thread
 
