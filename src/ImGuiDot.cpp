@@ -160,12 +160,8 @@ namespace ImGuiDot
 
     Style::Style()
     {
-        colours[StyleColour_Label]             = AUTO_COLOUR;
-        colours[StyleColour_ShapeBorder]       = AUTO_COLOUR;
-        colours[StyleColour_Arc]               = AUTO_COLOUR;
-        colours[StyleColour_ShapeBackground]   = AUTO_COLOUR;
-        colours[StyleColour_DiagramBackground] = AUTO_COLOUR;
-        colours[StyleColour_DiagramBorder]     = AUTO_COLOUR;
+        for (int i = 0; i < StyleColour_Count; ++i)
+            colours[i] = AUTO_COLOUR;
     }
 
     Style &GetStyle()
@@ -186,12 +182,13 @@ namespace ImGuiDot
             case StyleColour_Label:
                 return ImGui::GetStyleColorVec4(ImGuiCol_Text);
             case StyleColour_ShapeBorder:
+            case StyleColour_DiagramBorder:
             case StyleColour_Arc:
                 return ImGui::GetStyleColorVec4(ImGuiCol_Border);
             case StyleColour_ShapeBackground:
+                return ImGui::GetStyleColorVec4(ImGuiCol_FrameBg);
             case StyleColour_DiagramBackground:
-            case StyleColour_DiagramBorder:
-                // No ImGui counterpart: transparent, as in Graphviz.
+                // Transparent.
                 return ImColor(0.0f, 0.0f, 0.0f, 0.0f);
         }
 
