@@ -176,7 +176,7 @@ namespace ImGuiDot
         return style;
     }
 
-    ImVec4 GetStyleColourVec4(const StyleColour index)
+    ImColor GetStyleColour(const StyleColour index)
     {
         IM_ASSERT(index >= 0 && index < StyleColour_Count);
 
@@ -195,16 +195,16 @@ namespace ImGuiDot
             case StyleColour_DiagramBackground:
             case StyleColour_DiagramBorder:
                 // No ImGui counterpart: transparent, as in Graphviz.
-                return ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+                return ImColor(0.0f, 0.0f, 0.0f, 0.0f);
         }
 
         // Not reached: the index is checked above.
-        return ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+        return ImColor(0.0f, 0.0f, 0.0f, 0.0f);
     }
 
     ImU32 GetStyleColourU32(const StyleColour index)
     {
-        return ImGui::GetColorU32(GetStyleColourVec4(index));
+        return GetStyleColour(index);
     }
 
     void PushStyleColour(const StyleColour index, const ImColor &colour)
