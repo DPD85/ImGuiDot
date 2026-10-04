@@ -346,7 +346,8 @@ namespace ImGuiDot
             const Vec2 diagramMin = params.diagramPos;
             const Vec2 diagramMax = params.diagramPos + size;
 
-            const ImU32 bgColour = ExtractColour(params.graph, "bgcolor", params.colours[StyleColour_DiagramBackground]);
+            const ImU32 bgColour =
+                ExtractColour(params.graph, "bgcolor", params.colours[StyleColour_DiagramBackground]);
             draw->AddRectFilled(diagramMin, diagramMax, bgColour);
             draw->AddRect(diagramMin, diagramMax, params.colours[StyleColour_DiagramBorder]);
         }
@@ -916,21 +917,67 @@ namespace ImGuiDot
 
         ImFont *const font   = ImGui::GetIO().Fonts->Fonts[0];
         const float fontSize = static_cast<float>(label->fontsize) * params.zoom;
-        const Vec2 textSize  = font->CalcTextSizeA(fontSize, std::numeric_limits<float>::max(), -1.0f, label->text);
 
         // The colour is read from the owner's attribute and not from label->fontcolor: the Graphviz layout fills the
         // latter with "black" when the source code does not set it, which would hide the default colour.
         const ImU32 colour = ExtractColour(owner, "fontcolor", params.colours[StyleColour_Label]);
 
-        Vec2 pos;
-
-        if (label->set) pos = ConvertPoint(params, label->pos);
-        else pos = ConvertPoint(params, *position);
-
-        pos -= textSize / 2.0f;
+        // Centre of the label. [pixel]
+        const Vec2 centre = label->set ? ConvertPoint(params, label->pos) : ConvertPoint(params, *position);
 
         ImDrawList *const draw = ImGui::GetWindowDrawList();
-        draw->AddText(font, fontSize, pos, colour, label->text);
+
+        // An HTML label has no lines here: it is drawn as a single line.
+        if (label->html)
+        {
+            const Vec2 textSize = font->CalcTextSizeA(fontSize, std::numeric_limits<float>::max(), -1.0f, label->text);
+            draw->AddText(font, fontSize, centre - textSize / 2.0f, colour, label->text);
+            return;
+        }
+
+        // The layout splits a plain text label into lines at the \n, \l and \r escapes (centred, left and right
+        // justified), label->text keeps the escapes: draw the lines one by one.
+        const textspan_t *const lines = label->u.txt.span;
+        const size_t numLines         = label->u.txt.nspans;
+
+        // Size of the whole block of lines: the widest line and the sum of the line heights. [pixel]
+        Vec2 blockSize;
+        for (size_t i = 0; i < numLines; ++i)
+        {
+            const char *const text = lines[i].str ? lines[i].str : "";
+            const Vec2 lineSize    = font->CalcTextSizeA(fontSize, std::numeric_limits<float>::max(), -1.0f, text);
+
+            blockSize.x  = std::max(blockSize.x, lineSize.x);
+            blockSize.y += lineSize.y;
+        }
+
+        // Top left corner of the block of lines. [pixel]
+        const Vec2 blockTopLeft = centre - blockSize / 2.0f;
+
+        // Top left corner of the line to draw, the lines are stacked from the top of the block. [pixel]
+        Vec2 textPos = blockTopLeft;
+        for (size_t i = 0; i < numLines; ++i)
+        {
+            const char *const text = lines[i].str ? lines[i].str : "";
+            const Vec2 lineSize    = font->CalcTextSizeA(fontSize, std::numeric_limits<float>::max(), -1.0f, text);
+
+            switch (lines[i].just)
+            {
+                case 'l': // Left justified.
+                    textPos.x = blockTopLeft.x;
+                    break;
+                case 'r': // Right justified.
+                    textPos.x = blockTopLeft.x + blockSize.x - lineSize.x;
+                    break;
+                case 'n': // Centred.
+                default:
+                    textPos.x = centre.x - lineSize.x / 2.0f;
+                    break;
+            }
+
+            draw->AddText(font, fontSize, textPos, colour, text);
+            textPos.y += lineSize.y;
+        }
     }
 
     /// @brief Converts a point from Graphviz's coordinate system to pixels (ImGui's coordinate system).
