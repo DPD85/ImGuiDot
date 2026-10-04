@@ -435,8 +435,9 @@ namespace ImGuiDot
                 for (size_t i = 0; i < polygon->sides; ++i)
                     shapeVertices[i] = ConvertPoint(params, centre + vertices[i]);
 
-                draw->AddConvexPolyFilled(shapeVertices, polygon->sides, fillColour);
-                draw->AddPolyline(shapeVertices, polygon->sides, borderColour, ImDrawFlags_Closed, 1.0f);
+                draw->AddConvexPolyFilled(shapeVertices, static_cast<int>(polygon->sides), fillColour);
+                draw->AddPolyline(
+                    shapeVertices, static_cast<int>(polygon->sides), borderColour, ImDrawFlags_Closed, 1.0f);
             }
             // None shape or one of the not supported.
             //
