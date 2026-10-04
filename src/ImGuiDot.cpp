@@ -346,7 +346,8 @@ namespace ImGuiDot
             const Vec2 diagramMin = params.diagramPos;
             const Vec2 diagramMax = params.diagramPos + size;
 
-            const ImU32 bgColour = ExtractColour(params.graph, "bgcolor", params.colours[StyleColour_DiagramBackground]);
+            const ImU32 bgColour =
+                ExtractColour(params.graph, "bgcolor", params.colours[StyleColour_DiagramBackground]);
             draw->AddRectFilled(diagramMin, diagramMax, bgColour);
             draw->AddRect(diagramMin, diagramMax, params.colours[StyleColour_DiagramBorder]);
         }
@@ -945,7 +946,8 @@ namespace ImGuiDot
         {
             const char *const text = lines[i].str ? lines[i].str : "";
             const Vec2 lineSize    = font->CalcTextSizeA(fontSize, std::numeric_limits<float>::max(), -1.0f, text);
-            blockSize.x            = std::max(blockSize.x, lineSize.x);
+
+            blockSize.x  = std::max(blockSize.x, lineSize.x);
             blockSize.y += lineSize.y;
         }
 
@@ -967,7 +969,8 @@ namespace ImGuiDot
                 case 'r': // Right justified.
                     textPos.x = blockTopLeft.x + blockSize.x - lineSize.x;
                     break;
-                default: // Centred ('n').
+                case 'n': // Centred.
+                default:
                     textPos.x = centre.x - lineSize.x / 2.0f;
                     break;
             }
