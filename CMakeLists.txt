@@ -173,7 +173,4 @@ target_link_libraries(ImGui-Dot
 )
 
 target_compile_options(ImGui-Dot PRIVATE $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -pedantic-errors>)
-
-if(MSVC)
-    target_compile_options(ImGui-Dot PRIVATE "/utf-8")
-endif()
+target_compile_options(ImGui-Dot PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/w4 /utf-8>)
