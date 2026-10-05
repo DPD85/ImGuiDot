@@ -197,7 +197,7 @@ namespace ImGuiDot
 
     ImU32 GetStyleColourU32(const StyleColour index)
     {
-        return GetStyleColour(index);
+        return ImGui::GetColorU32(GetStyleColour(index).Value);
     }
 
     void PushStyleColour(const StyleColour index, const ImColor &colour)

@@ -35,9 +35,9 @@ namespace ImGuiDot
         StyleColour_Label,             ///< Labels of the nodes and of the arcs. Auto: ImGuiCol_Text.
         StyleColour_ShapeBorder,       ///< Border of the shapes. Auto: ImGuiCol_Border.
         StyleColour_Arc,               ///< Arcs and their arrowheads. Auto: ImGuiCol_Border.
-        StyleColour_ShapeBackground,   ///< Background of the shapes. Default: transparent.
+        StyleColour_ShapeBackground,   ///< Background of the shapes. Auto: ImGuiCol_FrameBg.
         StyleColour_DiagramBackground, ///< Background of the diagram. Default: transparent.
-        StyleColour_DiagramBorder,     ///< Border around the diagram. Default: transparent.
+        StyleColour_DiagramBorder,     ///< Border around the diagram. Auto: ImGuiCol_Border.
         StyleColour_Count
     };
 
