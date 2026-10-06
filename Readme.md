@@ -116,7 +116,7 @@ ImGuiDot::Update(diagramState, dotSourceCode);
 // Inside the rendering loop, executed each frame, where you want to render the diagram.
 ImGuiDot::Draw(diagramState);
 
-// Before to termivate the program or when the diagram need to be detroyed.
+// Before to terminate the program or when the diagram need to be detroyed.
 ImGuiDot::CleanUp(diagramState);
 ```
 
