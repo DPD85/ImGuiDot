@@ -45,6 +45,7 @@ CPMAddPackage(
     VERSION 15.1.0
     GIT_TAG 15.1.0
     GITLAB_REPOSITORY graphviz/graphviz
+    CUSTOM_CACHE_KEY Graphviz-15.1.0-patched
     PATCHES Graphviz-FlexBison.patch
     EXCLUDE_FROM_ALL ON
     SYSTEM ON
