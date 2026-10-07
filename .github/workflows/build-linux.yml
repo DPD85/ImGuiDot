@@ -1,0 +1,47 @@
+name: CMake on multiple platforms
+
+on:
+  workflow_dispatch:
+    inputs:
+      gcc_version:
+        description: 'GCC version (12, 13 o 14)'
+        type: string
+        default: 14
+
+      build_type:
+        description: 'Build type (Debug o Release)'
+        type: string
+        default: Release
+
+jobs:
+  build:
+    runs-on: "ubuntu-latest"
+
+    strategy:
+      fail-fast: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set reusable strings
+        id: strings
+        shell: bash
+        run: |
+          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+      - name: Install GCC ${{ inputs.gcc_version }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-${{ inputs.gcc_version }} g++-${{ inputs.gcc_version }}
+
+      - name: Configure CMake
+        run: >
+          cmake -B ${{ steps.strings.outputs.build-output-dir }}
+          -G Ninja
+          -DCMAKE_CXX_COMPILER=g++-${{ inputs.gcc_version }}
+          -DCMAKE_C_COMPILER=gcc-${{ inputs.gcc_version }}
+          -DCMAKE_BUILD_TYPE=${{ inputs.build_type }}
+          -S ${{ github.workspace }}
+
+      - name: Build
+        run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ inputs.build_type }}
