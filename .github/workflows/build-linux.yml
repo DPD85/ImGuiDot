@@ -42,6 +42,7 @@ jobs:
           echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
       - name: Install GCC ${{ inputs.gcc_version }}
+        if: ${{ ! startsWith(inputs.gcc_version, '14') }}
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-${{ inputs.gcc_version }} g++-${{ inputs.gcc_version }}
