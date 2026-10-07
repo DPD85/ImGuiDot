@@ -1,71 +1,243 @@
 name: CMake on multiple platforms
 
-on: [push, workflow_dispatch]
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      # Operating systems
+      ubuntu:
+        description: 'Linux (ubuntu-latest)'
+        type: boolean
+        default: true
+      windows:
+        description: 'Windows'
+        type: boolean
+        default: true
+
+      # GCC versions (Linux)
+      gcc_12:
+        description: 'GCC 12'
+        type: boolean
+        default: true
+      gcc_13:
+        description: 'GCC 13'
+        type: boolean
+        default: true
+      gcc_14:
+        description: 'GCC 14'
+        type: boolean
+        default: true
+
+      # MSVC toolset (Windows)
+      v143:
+        description: 'MSVC toolset v143 (VS 2022)'
+        type: boolean
+        default: true
+      v145:
+        description: 'MSVC toolset v145 (VS 2026)'
+        type: boolean
+        default: true
+
+      # Type of build
+      debug:
+        description: 'Debug'
+        type: boolean
+        default: true
+      release:
+        description: 'Release'
+        type: boolean
+        default: true
 
 jobs:
+  # ------------------------------------------------------------------
+  # Validation of input combinations.
+  # ------------------------------------------------------------------
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check input validity
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          set -e
+
+          if [[ "${{ inputs.ubuntu }}" != "true" && "${{ inputs.windows }}" != "true" ]]; then
+            echo "::error::No operating system selected."
+            exit 1
+          fi
+
+          if [[ "${{ inputs.ubuntu }}" == "true" ]]; then
+            if [[ "${{ inputs.gcc_12 }}" != "true" && \
+                  "${{ inputs.gcc_13 }}" != "true" && \
+                  "${{ inputs.gcc_14 }}" != "true" ]]; then
+              echo "::error::Ubuntu selected without a GCC version."
+              exit 1
+            fi
+          fi
+
+          if [[ "${{ inputs.windows }}" == "true" ]]; then
+            if [[ "${{ inputs.v143 }}" != "true" && "${{ inputs.v145 }}" != "true" ]]; then
+              echo "::error::Windows selected without a MSVC toolset."
+              exit 1
+            fi
+          fi
+
+          if [[ "${{ inputs.debug }}" != "true" && "${{ inputs.release }}" != "true" ]]; then
+            echo "::error::No build type (Debug/Release) selected."
+            exit 1
+          fi
+
+          echo "Valid input combinations."
+
+  # ------------------------------------------------------------------
+  # Build matrix
+  # ------------------------------------------------------------------
   build:
+    needs: validate
     runs-on: ${{ matrix.os }}
 
     strategy:
-      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations.
-      # Consider changing this to true when your workflow is stable.
       fail-fast: false
-
-      # Set up a matrix to run the following 3 configurations:
-      # 1. Windows, Release, latest MSVC compiler toolchain on the default runner image, default generator
-      # 2. Linux, Release, latest GCC compiler toolchain on the default runner image, default generator
-      # 3. Linux, Release, latest Clang compiler toolchain on the default runner image, default generator
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        build_type: [Debug, Release]
-        c_compiler: [gcc, clang, cl]
         include:
-          - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
+          # ---------- Linux + GCC ----------
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
+            gcc_version: "12"
+            toolset: ""
+            build_type: Debug
+
           - os: ubuntu-latest
-            c_compiler: clang
-            cpp_compiler: clang++
-        exclude:
-          - os: windows-latest
             c_compiler: gcc
-          - os: windows-latest
-            c_compiler: clang
+            cpp_compiler: g++
+            gcc_version: "12"
+            toolset: ""
+            build_type: Release
+
           - os: ubuntu-latest
+            c_compiler: gcc
+            cpp_compiler: g++
+            gcc_version: "13"
+            toolset: ""
+            build_type: Debug
+
+          - os: ubuntu-latest
+            c_compiler: gcc
+            cpp_compiler: g++
+            gcc_version: "13"
+            toolset: ""
+            build_type: Release
+
+          - os: ubuntu-latest
+            c_compiler: gcc
+            cpp_compiler: g++
+            gcc_version: "14"
+            toolset: ""
+            build_type: Debug
+
+          - os: ubuntu-latest
+            c_compiler: gcc
+            cpp_compiler: g++
+            gcc_version: "14"
+            toolset: ""
+            build_type: Release
+
+          # ---------- Windows + MSVC toolset ----------
+          - os: windows-latest
             c_compiler: cl
+            cpp_compiler: cl
+            gcc_version: ""
+            toolset: v143
+            build_type: Debug
+
+          - os: windows-latest
+            c_compiler: cl
+            cpp_compiler: cl
+            gcc_version: ""
+            toolset: v143
+            build_type: Release
+
+          - os: windows-latest
+            c_compiler: cl
+            cpp_compiler: cl
+            gcc_version: ""
+            toolset: v145
+            build_type: Debug
+
+          - os: windows-latest
+            c_compiler: cl
+            cpp_compiler: cl
+            gcc_version: ""
+            toolset: v145
+            build_type: Release
+
+    # Filter: only selected combinations
+    if: |
+        (
+          (
+            matrix.os == 'ubuntu-latest' && inputs.ubuntu == true &&
+            (
+              (matrix.gcc_version == '12' && inputs.gcc_12 == true) ||
+              (matrix.gcc_version == '13' && inputs.gcc_13 == true) ||
+              (matrix.gcc_version == '14' && inputs.gcc_14 == true)
+            )
+          )
+          ||
+          (
+             matrix.os == 'windows-latest' && inputs.windows == true &&
+             (
+               (matrix.toolset == 'v143' && inputs.v143 == true) ||
+               (matrix.toolset == 'v145' && inputs.v145 == true)
+             )
+          )
+        )
+        &&
+        (
+          (matrix.build_type == 'Debug'   && inputs.debug   == true) ||
+          (matrix.build_type == 'Release' && inputs.release == true)
+        )
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set reusable strings
-      # Turn repeated input strings (such as the build output directory) into step outputs.
-      # These step outputs can be used throughout the workflow file.
-      id: strings
-      shell: bash
-      run: |
-        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+      - name: Set reusable strings
+        id: strings
+        shell: bash
+        run: |
+          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-    - name: Configure CMake on Windows
-      if: ${{ matrix.os == 'windows-latest' }}
-      run: >
-        cmake -B ${{ steps.strings.outputs.build-output-dir }}
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-        -S ${{ github.workspace }}
+      # ----- GCC installation
+      - name: Install GCC ${{ matrix.gcc_version }}
+        if: matrix.gcc_version != ''
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-${{ matrix.gcc_version }} g++-${{ matrix.gcc_version }}
 
-    - name: Configure CMake on Linux
-      if: ${{ matrix.os != 'windows-latest' }}
-      run: >
-        cmake -B ${{ steps.strings.outputs.build-output-dir }} -G Ninja
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -S ${{ github.workspace }}
+      # ----- Configure Windows
+      - name: Configure CMake on Windows
+        if: matrix.os == 'windows-latest'
+        run: >
+          cmake -B ${{ steps.strings.outputs.build-output-dir }}
+          -T ${{ matrix.toolset }}
+          -A x64
+          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+          -S ${{ github.workspace }}
+        # Nota: per v145 su runner molto recenti potrebbe essere necessario
+        # -G "Visual Studio 18 2026". Se il job fallisce con "toolset not found"
+        # si può aggiungere un secondo job o uno step di fallback.
 
-    - name: Build
-      # Build your program with the given configuration.
-      # Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+      # ----- Configure Linux
+      - name: Configure CMake on Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: >
+          cmake -B ${{ steps.strings.outputs.build-output-dir }}
+          -G Ninja
+          -DCMAKE_CXX_COMPILER=g++-${{ matrix.gcc_version }}
+          -DCMAKE_C_COMPILER=gcc-${{ matrix.gcc_version }}
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -S ${{ github.workspace }}
+
+      # ----- Build
+      - name: Build
+        run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
