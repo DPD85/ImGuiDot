@@ -27,7 +27,7 @@ on:
 
 jobs:
   build:
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-24.04"
 
     strategy:
       fail-fast: true
@@ -41,11 +41,13 @@ jobs:
         run: |
           echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-      - name: Install GCC ${{ inputs.gcc_version }}
-        if: ${{ ! startsWith(inputs.gcc_version, '14') }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-${{ inputs.gcc_version }} g++-${{ inputs.gcc_version }}
+      # On the ubuntu-24.04 runner all version of GCC are already installed.
+      # On the ubuntu-26.04 runner (the successor), only GCC 12 is not installed.
+      #- name: Install GCC ${{ inputs.gcc_version }}
+      #  if: ${{ inputs.gcc_version == '12' }}
+      #  run: |
+      #    sudo apt-get update
+      #    sudo apt-get install -y gcc-${{ inputs.gcc_version }} g++-${{ inputs.gcc_version }}
 
       - name: Configure CMake
         run: >
