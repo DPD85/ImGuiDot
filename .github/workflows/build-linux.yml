@@ -4,14 +4,26 @@ on:
   workflow_dispatch:
     inputs:
       gcc_version:
-        description: 'GCC version (12, 13 o 14)'
+        description: 'GCC version'
         type: string
-        default: 14
+        required: true
 
       build_type:
-        description: 'Build type (Debug o Release)'
+        description: 'Build type (Debug, Release, ecc..)'
         type: string
-        default: Release
+        required: true
+
+  workflow_call:
+    inputs:
+      gcc_version:
+        description: 'GCC version'
+        type: string
+        required: true
+
+      build_type:
+        description: 'Build type (Debug, Release, ecc..)'
+        type: string
+        required: true
 
 jobs:
   build:

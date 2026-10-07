@@ -4,14 +4,26 @@ on:
   workflow_dispatch:
     inputs:
       toolset:
-        description: 'MSVC tollset (v143 o v145)'
+        description: 'MSVC tollset'
         type: string
-        default: v145
+        required: true
 
       build_type:
-        description: 'Build type (Debug o Release)'
+        description: 'Build type (Debug, Release, ecc..)'
         type: string
-        default: Release
+        required: true
+
+  workflow_call:
+    inputs:
+      toolset:
+        description: 'MSVC tollset'
+        type: string
+        required: true
+
+      build_type:
+        description: 'Build type (Debug, Release, ecc..)'
+        type: string
+        required: true
 
 jobs:
   build:
