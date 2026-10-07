@@ -90,7 +90,7 @@ jobs:
 
   linux-gcc14-release:
     needs: validate
-    if: inputs.ubuntu && inputs.gcc14 && inputs.release
+    if: ${{ github.event_name }} == "push" || (inputs.ubuntu && inputs.gcc14 && inputs.release)
     uses: ./.github/workflows/build-linux.yml
     with:
       gcc_version: 14
@@ -98,7 +98,7 @@ jobs:
 
   windows-v145-release:
     needs: validate
-    if: inputs.windows && inputs.v145 && inputs.release
+    if: ${{ github.event_name }} == "push" || (inputs.windows && inputs.v145 && inputs.release)
     uses: ./.github/workflows/build-windows.yml
     with:
       toolset: v145
