@@ -1,0 +1,55 @@
+name: CMake on multiple platforms
+
+on:
+  workflow_dispatch:
+    inputs:
+      toolset:
+        description: 'MSVC tollset'
+        type: string
+        required: true
+
+      build_type:
+        description: 'Build type (Debug, Release, ecc..)'
+        type: string
+        required: true
+
+  workflow_call:
+    inputs:
+      toolset:
+        description: 'MSVC tollset'
+        type: string
+        required: true
+
+      build_type:
+        description: 'Build type (Debug, Release, ecc..)'
+        type: string
+        required: true
+
+jobs:
+  build:
+    runs-on: "windows-2025-vs2026"
+
+    strategy:
+      fail-fast: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set reusable strings
+        id: strings
+        shell: bash
+        run: |
+          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+      - name: Configure CMake
+        run: >
+          cmake -B ${{ steps.strings.outputs.build-output-dir }}
+          -T ${{ inputs.toolset }}
+          -A x64
+          -DCMAKE_CXX_COMPILER=cl
+          -DCMAKE_C_COMPILER=cl
+          -S ${{ github.workspace }}
+
+      # ----- Build
+      - name: Build
+        run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ inputs.build_type }}

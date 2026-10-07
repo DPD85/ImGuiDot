@@ -1,0 +1,180 @@
+name: CMake on multiple platforms
+
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      # Operating systems
+      ubuntu:
+        description: 'Linux (ubuntu-latest)'
+        type: boolean
+        default: true
+      windows:
+        description: 'Windows'
+        type: boolean
+        default: true
+
+      # GCC versions (Linux)
+      gcc12:
+        description: 'GCC 12'
+        type: boolean
+        default: true
+      gcc13:
+        description: 'GCC 13'
+        type: boolean
+        default: true
+      gcc14:
+        description: 'GCC 14'
+        type: boolean
+        default: true
+
+      # MSVC toolset (Windows)
+      v143:
+        description: 'MSVC toolset v143 (VS 2022)'
+        type: boolean
+        default: true
+      v145:
+        description: 'MSVC toolset v145 (VS 2026)'
+        type: boolean
+        default: true
+
+      # Type of build
+      debug:
+        description: 'Debug'
+        type: boolean
+        default: true
+      release:
+        description: 'Release'
+        type: boolean
+        default: true
+
+jobs:
+  # ------------------------------------------------------------------
+  # Validation of input combinations.
+  # ------------------------------------------------------------------
+  validate-inputs:
+    name: Validate inputs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check input validity
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          set -e
+
+          if [[ "${{ inputs.ubuntu }}" != "true" && "${{ inputs.windows }}" != "true" ]]; then
+            echo "::error::No operating system selected."
+            exit 1
+          fi
+
+          if [[ "${{ inputs.ubuntu }}" == "true" ]]; then
+            if [[ "${{ inputs.gcc12 }}" != "true" && \
+                  "${{ inputs.gcc13 }}" != "true" && \
+                  "${{ inputs.gcc14 }}" != "true" ]]; then
+              echo "::error::Ubuntu selected without a GCC version."
+              exit 1
+            fi
+          fi
+
+          if [[ "${{ inputs.windows }}" == "true" ]]; then
+            if [[ "${{ inputs.v143 }}" != "true" && "${{ inputs.v145 }}" != "true" ]]; then
+              echo "::error::Windows selected without a MSVC toolset."
+              exit 1
+            fi
+          fi
+
+          if [[ "${{ inputs.debug }}" != "true" && "${{ inputs.release }}" != "true" ]]; then
+            echo "::error::No build type (Debug/Release) selected."
+            exit 1
+          fi
+
+          echo "Valid input combinations."
+
+  linux-gcc12-release:
+    needs: validate-inputs
+    name: Linux GCC12 Release
+    if: github.event_name == 'push' || (inputs.ubuntu && inputs.gcc12 && inputs.release)
+    uses: ./.github/workflows/build-linux.yml
+    with:
+      gcc_version: 12
+      build_type: Release
+
+  linux-gcc12-debug:
+    needs: validate-inputs
+    name: Linux GCC12 Debug
+    if: github.event_name == 'push' || (inputs.ubuntu && inputs.gcc12 && inputs.debug)
+    uses: ./.github/workflows/build-linux.yml
+    with:
+      gcc_version: 12
+      build_type: Debug
+
+  linux-gcc13-release:
+    needs: validate-inputs
+    name: Linux GCC13 Release
+    if: github.event_name == 'push' || (inputs.ubuntu && inputs.gcc13 && inputs.release)
+    uses: ./.github/workflows/build-linux.yml
+    with:
+      gcc_version: 13
+      build_type: Release
+
+  linux-gcc13-debug:
+    needs: validate-inputs
+    name: Linux GCC13 Debug
+    if: github.event_name == 'push' || (inputs.ubuntu && inputs.gcc13 && inputs.debug)
+    uses: ./.github/workflows/build-linux.yml
+    with:
+      gcc_version: 13
+      build_type: Debug
+
+  linux-gcc14-release:
+    needs: validate-inputs
+    name: Linux GCC14 Release
+    if: github.event_name == 'push' || (inputs.ubuntu && inputs.gcc14 && inputs.release)
+    uses: ./.github/workflows/build-linux.yml
+    with:
+      gcc_version: 14
+      build_type: Release
+
+  linux-gcc14-debug:
+    needs: validate-inputs
+    name: Linux GCC14 Debug
+    if: github.event_name == 'push' || (inputs.ubuntu && inputs.gcc14 && inputs.debug)
+    uses: ./.github/workflows/build-linux.yml
+    with:
+      gcc_version: 14
+      build_type: Debug
+
+  windows-v143-release:
+    needs: validate-inputs
+    name: Windows v143 Release
+    if: github.event_name == 'push' || (inputs.windows && inputs.v143 && inputs.release)
+    uses: ./.github/workflows/build-windows.yml
+    with:
+      toolset: v143
+      build_type: Release
+
+  windows-v143-debug:
+    needs: validate-inputs
+    name: Windows v143 Debug
+    if: github.event_name == 'push' || (inputs.windows && inputs.v143 && inputs.debug)
+    uses: ./.github/workflows/build-windows.yml
+    with:
+      toolset: v143
+      build_type: Debug
+
+  windows-v145-release:
+    needs: validate-inputs
+    name: Windows v145 Release
+    if: github.event_name == 'push' || (inputs.windows && inputs.v145 && inputs.release)
+    uses: ./.github/workflows/build-windows.yml
+    with:
+      toolset: v145
+      build_type: Release
+
+  windows-v145-debug:
+    needs: validate-inputs
+    name: Windows v145 Debug
+    if: github.event_name == 'push' || (inputs.windows && inputs.v145 && inputs.debug)
+    uses: ./.github/workflows/build-windows.yml
+    with:
+      toolset: v145
+      build_type: Debug
