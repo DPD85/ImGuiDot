@@ -436,8 +436,13 @@ namespace ImGuiDot
                     shapeVertices[i] = ConvertPoint(params, centre + vertices[i]);
 
                 draw->AddConvexPolyFilled(shapeVertices, static_cast<int>(polygon->sides), fillColour);
+#if IMGUI_VERSION_NUM >= 19'300
+                draw->AddPolyline(
+                    shapeVertices, static_cast<int>(polygon->sides), borderColour, 1.0f, ImDrawFlags_Closed);
+#else
                 draw->AddPolyline(
                     shapeVertices, static_cast<int>(polygon->sides), borderColour, ImDrawFlags_Closed, 1.0f);
+#endif
             }
             // None shape or one of the not supported.
             //

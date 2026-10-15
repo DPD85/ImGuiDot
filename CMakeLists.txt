@@ -98,7 +98,7 @@ set(CMAKE_FOLDER "${CMAKE_FOLDER_OLD}")
 if(BUILD_IMGUI)
     CPMAddPackage(
         NAME ImGui
-        VERSION 1.92.6
+        VERSION 1.93.0
         GITHUB_REPOSITORY ocornut/imgui
         DOWNLOAD_ONLY ON
     )
