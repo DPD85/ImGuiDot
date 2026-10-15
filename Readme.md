@@ -8,7 +8,10 @@ It uses Graphviz 15.1.0 to parse the DOT language and compute the layout, then i
 ## Minimum requirements
 
 - a compiler supporting the C17 and C++17 language versions;
-- CMake 3.25.
+- CMake 3.25;
+- ImGui version between 1.92.6 and 1.93.0*.
+
+\* It tentatively works with other ImGui versions.
 
 Here is an example of a stack compatible with the library:
 - GCC from the 12 to the 14.x version on Linux Debian 13*;
@@ -173,4 +176,4 @@ The documentation is written directly as comments in the source code, so read th
 |:---------|--------:|:---------------------------------------|
 | CPM      |  0.42.0 | https://github.com/cpm-cmake/CPM.cmake |
 | Graphviz |  15.1.0 | https://gitlab.com/graphviz/graphviz   |
-| ImGui    |  1.92.6 | https://github.com/ocornut/imgui       |
+| ImGui    |  1.93.0 | https://github.com/ocornut/imgui       |
