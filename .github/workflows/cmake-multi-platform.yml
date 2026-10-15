@@ -6,7 +6,7 @@ on:
     inputs:
       # Operating systems
       ubuntu:
-        description: 'Linux (ubuntu-latest)'
+        description: 'Linux'
         type: boolean
         default: true
       windows:
@@ -30,7 +30,7 @@ on:
 
       # MSVC toolset (Windows)
       v143:
-        description: 'MSVC toolset v143 (VS 2022)'
+        description: 'MSVC toolset v143 (VS 2026)'
         type: boolean
         default: true
       v145:
