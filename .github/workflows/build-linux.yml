@@ -1,0 +1,57 @@
+name: Linux GCC
+
+on:
+  workflow_dispatch:
+    inputs:
+      gcc_version:
+        description: 'GCC version'
+        type: string
+        required: true
+
+      build_type:
+        description: 'Build type (Debug, Release, ecc..)'
+        type: string
+        required: true
+
+  workflow_call:
+    inputs:
+      gcc_version:
+        description: 'GCC version'
+        type: string
+        required: true
+
+      build_type:
+        description: 'Build type (Debug, Release, ecc..)'
+        type: string
+        required: true
+
+jobs:
+  build:
+    runs-on: "ubuntu-24.04"
+
+    strategy:
+      fail-fast: true
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # On the ubuntu-24.04 runner all version of GCC are already installed.
+      # On the ubuntu-26.04 runner (the successor), only GCC 12 is not installed.
+      #- name: Install GCC ${{ inputs.gcc_version }}
+      #  if: ${{ inputs.gcc_version == '12' }}
+      #  run: |
+      #    sudo apt-get update
+      #    sudo apt-get install -y gcc-${{ inputs.gcc_version }} g++-${{ inputs.gcc_version }}
+
+      - name: Configure CMake
+        run: >
+          cmake
+          -G Ninja
+          -DCMAKE_CXX_COMPILER=g++-${{ inputs.gcc_version }}
+          -DCMAKE_C_COMPILER=gcc-${{ inputs.gcc_version }}
+          -DCMAKE_BUILD_TYPE=${{ inputs.build_type }}
+          -B build
+          -S .
+
+      - name: Build
+        run: cmake --build build --parallel $(nproc)

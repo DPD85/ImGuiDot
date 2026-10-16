@@ -1,0 +1,54 @@
+name: Windows VS2026
+
+on:
+  workflow_dispatch:
+    inputs:
+      toolset:
+        description: 'MSVC tollset'
+        type: string
+        required: true
+
+      build_type:
+        description: 'Build type (Debug, Release, ecc..)'
+        type: string
+        required: true
+
+  workflow_call:
+    inputs:
+      toolset:
+        description: 'MSVC tollset'
+        type: string
+        required: true
+
+      build_type:
+        description: 'Build type (Debug, Release, ecc..)'
+        type: string
+        required: true
+
+jobs:
+  build:
+    runs-on: "windows-2025-vs2026"
+
+    strategy:
+      fail-fast: true
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Configure CMake
+        run: >
+          cmake
+          -G "Visual Studio 18 2026"
+          -A x64
+          -T ${{ inputs.toolset }}
+          -DCMAKE_CXX_COMPILER=cl
+          -DCMAKE_C_COMPILER=cl
+          -B build
+          -S .
+
+      - name: Build
+        run: >
+          cmake
+          --build build
+          --config ${{ inputs.build_type }}
+          --parallel $NUMBER_OF_PROCESSORS
