@@ -38,17 +38,17 @@ jobs:
       - name: Configure CMake
         run: >
           cmake
-            -G "Visual Studio 18 2026"
-            -A x64
-            -T ${{ inputs.toolset }}
-            -DCMAKE_CXX_COMPILER=cl
-            -DCMAKE_C_COMPILER=cl
-            -B build
-            -S .
+          -G "Visual Studio 18 2026"
+          -A x64
+          -T ${{ inputs.toolset }}
+          -DCMAKE_CXX_COMPILER=cl
+          -DCMAKE_C_COMPILER=cl
+          -B build
+          -S .
 
       - name: Build
         run: >
           cmake
-            --build build
-            --config ${{ inputs.build_type }}
-            --parallel $NUMBER_OF_PROCESSORS
+          --build build
+          --config ${{ inputs.build_type }}
+          --parallel $NUMBER_OF_PROCESSORS
