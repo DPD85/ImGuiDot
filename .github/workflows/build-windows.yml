@@ -1,4 +1,4 @@
-name: CMake on multiple platforms
+name: Windows VS2026
 
 on:
   workflow_dispatch:
@@ -35,21 +35,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set reusable strings
-        id: strings
-        shell: bash
-        run: |
-          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
-
       - name: Configure CMake
         run: >
-          cmake -B ${{ steps.strings.outputs.build-output-dir }}
-          -T ${{ inputs.toolset }}
-          -A x64
-          -DCMAKE_CXX_COMPILER=cl
-          -DCMAKE_C_COMPILER=cl
-          -S ${{ github.workspace }}
+          cmake
+            -G "Visual Studio 18 2026"
+            -A x64
+            -T ${{ inputs.toolset }}
+            -DCMAKE_CXX_COMPILER=cl
+            -DCMAKE_C_COMPILER=cl
+            -B build
+            -S .
 
-      # ----- Build
       - name: Build
-        run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ inputs.build_type }}
+        run: >
+          cmake
+            --build build
+            --config ${{ inputs.build_type }}
+            --parallel $NUMBER_OF_PROCESSORS
