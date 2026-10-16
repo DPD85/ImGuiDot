@@ -33,7 +33,7 @@ jobs:
       fail-fast: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # On the ubuntu-24.04 runner all version of GCC are already installed.
       # On the ubuntu-26.04 runner (the successor), only GCC 12 is not installed.
